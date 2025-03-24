@@ -159,15 +159,18 @@ class CoffeeProvider with ChangeNotifier {
     return sortedDrinks.take(3).map((entry) => entry.key).toList();
   }
 
-  double predictCaffeineLevel() {
-    final now = DateTime.now();
+  double predictCaffeineLevel([DateTime? time]) {
+    final targetTime = time ?? DateTime.now();
     var totalCaffeine = 0.0;
 
     for (final drink in _drinks) {
-      final hoursSinceConsumption = now.difference(drink.timestamp).inHours;
-      final remainingCaffeine = drink.caffeineAmount *
-          pow(0.5, hoursSinceConsumption / 5.0); // 5-hour half-life
-      totalCaffeine += remainingCaffeine;
+      final hoursSinceConsumption =
+          targetTime.difference(drink.timestamp).inHours;
+      if (hoursSinceConsumption >= 0) {
+        final remainingCaffeine = drink.caffeineAmount *
+            pow(0.5, hoursSinceConsumption / 5.0); // 5-hour half-life
+        totalCaffeine += remainingCaffeine;
+      }
     }
 
     return totalCaffeine;

@@ -1,9 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
 import '../providers/coffee_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -20,20 +19,71 @@ class StatsScreen extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context),
-                  const SizedBox(height: 24),
-                  _buildCaffeineProgress(context, coffeeProvider),
-                  const SizedBox(height: 24),
-                  _buildWeeklyOverview(context, coffeeProvider),
-                  const SizedBox(height: 24),
-                  _buildFavoritesAndAverage(context, coffeeProvider),
-                ],
-              ),
+            return CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  floating: true,
+                  pinned: false,
+                  backgroundColor: AppTheme.backgroundColor,
+                  elevation: 0,
+                  title: const Text('Deine Statistiken'),
+                  titleTextStyle: Theme.of(context).textTheme.headlineLarge,
+                ),
+                SliverToBoxAdapter(
+                  child: _buildCaffeineProgress(context, coffeeProvider),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Wochenübersicht',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildWeeklyOverview(context, coffeeProvider),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Tägliche Durchschnitte',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            Text(
+                              'Letzte 7 Tage',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: AppTheme.secondaryTextColor,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDailyAverages(context, coffeeProvider),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Deine Lieblingsgetränke',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildFavoriteDrinks(context, coffeeProvider),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Koffein-Prognose',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildCaffeinePrognosis(context, coffeeProvider),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -41,346 +91,614 @@ class StatsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Text(
-      'Deine Kaffee-Statistiken',
-      style: Theme.of(context).textTheme.headlineLarge,
-    );
-  }
+  Widget _buildCaffeineProgress(
+      BuildContext context, CoffeeProvider coffeeProvider) {
+    // Berechne das aktuelle Koffein im Körper
+    final currentCaffeine = coffeeProvider.predictCaffeineLevel(DateTime.now());
 
-  Widget _buildCaffeineProgress(BuildContext context, CoffeeProvider provider) {
-    final currentCaffeineLevel = provider.predictCaffeineLevel();
-    // Maximaler Koffeingehalt für einen durchschnittlichen Erwachsenen (ca. 400 mg)
+    // Maximales Koffein (etwa 400mg wird allgemein als Tageslimit angesehen)
     const maxCaffeine = 400.0;
-    final caffeinePercentage = min(1.0, currentCaffeineLevel / maxCaffeine);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Aktueller Koffeinstand',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+    // Prozentwert (zwischen 0 und 1)
+    final caffeinePercent = (currentCaffeine / maxCaffeine).clamp(0.0, 1.0);
+
+    // Bestimme den Effekt basierend auf dem Koffeinlevel
+    String effect;
+    Color effectColor;
+
+    if (caffeinePercent < 0.25) {
+      effect = 'Leichte Wachheit';
+      effectColor = Colors.green;
+    } else if (caffeinePercent < 0.5) {
+      effect = 'Optimale Konzentration';
+      effectColor = Colors.blue;
+    } else if (caffeinePercent < 0.75) {
+      effect = 'Hohe Energie';
+      effectColor = Colors.orange;
+    } else {
+      effect = 'Risiko von Nervosität';
+      effectColor = Colors.red;
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CustomPaint(
+                size: const Size(80, 100),
+                painter: CoffeeCupPainter(fillLevel: caffeinePercent),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${currentCaffeineLevel.toStringAsFixed(1)} mg',
+                      'Aktuelles Koffein',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(
+                      '${currentCaffeine.toStringAsFixed(0)} mg',
                       style:
                           Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
+                                color: _getCaffeineColor(caffeinePercent),
                                 fontWeight: FontWeight.bold,
                               ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'von empfohlenen 400 mg',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.secondaryTextColor,
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: effectColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        effect,
+                        style: TextStyle(
+                          color: effectColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    _buildEffectsIndicator(context, caffeinePercentage),
                   ],
                 ),
-                CircularPercentIndicator(
-                  radius: 70.0,
-                  lineWidth: 15.0,
-                  animation: true,
-                  percent: caffeinePercentage,
-                  center: SizedBox(
-                    width: 70,
-                    height: 70,
-                    child: CustomPaint(
-                      painter: CoffeeCupPainter(fillLevel: caffeinePercentage),
-                    ),
-                  ),
-                  circularStrokeCap: CircularStrokeCap.round,
-                  progressColor: _getCaffeineColor(caffeinePercentage),
-                  backgroundColor: Colors.grey[200]!,
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LinearPercentIndicator(
+            lineHeight: 10,
+            percent: caffeinePercent,
+            backgroundColor: Colors.grey[200],
+            progressColor: _getCaffeineColor(caffeinePercent),
+            barRadius: const Radius.circular(5),
+            padding: EdgeInsets.zero,
+            animation: true,
+            animationDuration: 1000,
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '0 mg',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              Text(
+                'Empfohlenes Limit: 400 mg',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildEffectsIndicator(
-      BuildContext context, double caffeinePercentage) {
-    String effectText;
-    Color effectColor;
-
-    if (caffeinePercentage < 0.2) {
-      effectText = 'Leichte Wachheit';
-      effectColor = Colors.green[600]!;
-    } else if (caffeinePercentage < 0.5) {
-      effectText = 'Optimale Konzentration';
-      effectColor = Colors.orange[600]!;
-    } else if (caffeinePercentage < 0.8) {
-      effectText = 'Hohe Aufmerksamkeit';
-      effectColor = Colors.deepOrange[600]!;
+  Color _getCaffeineColor(double percent) {
+    if (percent < 0.25) {
+      return Colors.green;
+    } else if (percent < 0.5) {
+      return Colors.blue;
+    } else if (percent < 0.75) {
+      return Colors.orange;
     } else {
-      effectText = 'Risiko von Nervosität';
-      effectColor = Colors.red[600]!;
+      return Colors.red;
+    }
+  }
+
+  Widget _buildWeeklyOverview(
+      BuildContext context, CoffeeProvider coffeeProvider) {
+    final weekDays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    final today = DateTime.now();
+
+    // Erstelle BarChartGroups für die letzten 7 Tage
+    final barGroups = <BarChartGroupData>[];
+
+    for (int i = 6; i >= 0; i--) {
+      final date = today.subtract(Duration(days: i));
+      final dayDrinks = coffeeProvider.getDrinksForDay(date);
+
+      final totalCaffeine = dayDrinks.fold<double>(
+        0,
+        (sum, drink) => sum + drink.caffeineAmount,
+      );
+
+      // Index des Wochentags für die Anzeige (0 = Montag)
+      final weekdayIndex = (today.weekday - i - 1) % 7;
+
+      barGroups.add(BarChartGroupData(
+        x: 6 - i,
+        barRods: [
+          BarChartRodData(
+            toY: totalCaffeine,
+            color: date.day == today.day
+                ? AppTheme.primaryColor
+                : AppTheme.primaryColor.withOpacity(0.6),
+            width: 16,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+          ),
+        ],
+      ));
     }
 
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: effectColor,
-            shape: BoxShape.circle,
+    return Container(
+      height: 220,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: 400,
+          titlesData: FlTitlesData(
+            show: true,
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  // Berechne den Index des Wochentags
+                  int dayIndex = (today.weekday - (6 - value.toInt()) - 1) % 7;
+                  if (dayIndex < 0) dayIndex += 7;
+
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text(
+                      weekDays[dayIndex],
+                      style: TextStyle(
+                        color: value.toInt() == 6
+                            ? AppTheme.primaryColor
+                            : AppTheme.secondaryTextColor,
+                        fontWeight: value.toInt() == 6
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 12,
+                      ),
+                    ),
+                  );
+                },
+                reservedSize: 28,
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text(
+                      value.toInt().toString(),
+                      style: TextStyle(
+                        color: AppTheme.secondaryTextColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  );
+                },
+                interval: 100,
+                reservedSize: 40,
+              ),
+            ),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawHorizontalLine: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: Colors.grey[200]!,
+              strokeWidth: 1,
+              dashArray: [5, 5],
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          barGroups: barGroups,
+          barTouchData: BarTouchData(
+            touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: AppTheme.primaryColor.withOpacity(0.8),
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                // Berechne das Datum für diesen Balken
+                final date =
+                    today.subtract(Duration(days: 6 - group.x.toInt()));
+                return BarTooltipItem(
+                  '${date.day}.${date.month}.${date.year}\n',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: '${rod.toY.toInt()} mg',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
-        const SizedBox(width: 8),
-        Text(
-          effectText,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: effectColor,
-              ),
-        ),
-      ],
-    );
-  }
-
-  Color _getCaffeineColor(double percentage) {
-    if (percentage < 0.25) {
-      return Colors.green[600]!;
-    } else if (percentage < 0.5) {
-      return Colors.orange[600]!;
-    } else if (percentage < 0.75) {
-      return Colors.deepOrange[600]!;
-    } else {
-      return Colors.red[600]!;
-    }
-  }
-
-  Widget _buildWeeklyOverview(BuildContext context, CoffeeProvider provider) {
-    final weeklyData = provider.getWeeklyCaffeineConsumption();
-    final maxCaffeine = weeklyData.values.isEmpty
-        ? 400.0
-        : max(weeklyData.values.reduce(max), 1.0);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Wochenübersicht',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: BarChart(
-                BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  maxY: maxCaffeine + 50,
-                  barTouchData: BarTouchData(
-                    enabled: true,
-                    touchTooltipData: BarTouchTooltipData(
-                      tooltipBgColor: Colors.white.withOpacity(0.8),
-                      tooltipPadding: const EdgeInsets.all(8),
-                      tooltipMargin: 8,
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        String weekDay = weeklyData.keys.elementAt(groupIndex);
-                        return BarTooltipItem(
-                          '$weekDay: ${rod.toY.toStringAsFixed(1)} mg',
-                          const TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  titlesData: FlTitlesData(
-                    show: true,
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (double value, TitleMeta meta) {
-                          final index = value.toInt();
-                          if (index >= 0 && index < weeklyData.length) {
-                            return Text(
-                              weeklyData.keys.elementAt(index),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            );
-                          }
-                          return const Text('');
-                        },
-                        reservedSize: 28,
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        interval: maxCaffeine / 4,
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            value.toInt().toString(),
-                            style: Theme.of(context).textTheme.bodySmall,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  borderData: FlBorderData(
-                    show: false,
-                  ),
-                  barGroups: List.generate(
-                    weeklyData.length,
-                    (index) {
-                      final value = weeklyData.values.elementAt(index);
-                      return BarChartGroupData(
-                        x: index,
-                        barRods: [
-                          BarChartRodData(
-                            toY: value,
-                            width: 22,
-                            color: AppTheme.secondaryColor,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(4),
-                              topRight: Radius.circular(4),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Widget _buildFavoritesAndAverage(
-      BuildContext context, CoffeeProvider provider) {
+  Widget _buildDailyAverages(
+      BuildContext context, CoffeeProvider coffeeProvider) {
+    // Berechne die Durchschnittswerte für die letzten 7 Tage
+    final today = DateTime.now();
+    double totalCaffeine = 0;
+    int totalDrinks = 0;
+
+    for (int i = 0; i < 7; i++) {
+      final date = today.subtract(Duration(days: i));
+      final dayDrinks = coffeeProvider.getDrinksForDay(date);
+
+      totalDrinks += dayDrinks.length;
+      totalCaffeine += dayDrinks.fold<double>(
+        0,
+        (sum, drink) => sum + drink.caffeineAmount,
+      );
+    }
+
+    final avgDrinksPerDay = totalDrinks / 7;
+    final avgCaffeinePerDay = totalCaffeine / 7;
+
     return Row(
       children: [
         Expanded(
-          child: _buildDailyAverage(context, provider),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppTheme.cardShadow,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.coffee,
+                        color: AppTheme.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Tassen',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  avgDrinksPerDay.toStringAsFixed(1),
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Text(
+                  'pro Tag',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: _buildFavoriteDrinks(context, provider),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: AppTheme.cardShadow,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.bolt,
+                        color: AppTheme.primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Koffein',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${avgCaffeinePerDay.toInt()} mg',
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Text(
+                  'pro Tag',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildDailyAverage(BuildContext context, CoffeeProvider provider) {
-    final avgConsumption = provider.getAverageDailyConsumption();
-    final avgDrinks =
-        avgConsumption / 80; // Annahme: Durchschnittlicher Espresso hat 80mg
+  Widget _buildFavoriteDrinks(
+      BuildContext context, CoffeeProvider coffeeProvider) {
+    // Zähle, wie oft jedes Getränk getrunken wurde
+    final drinkCounts = <String, int>{};
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Täglicher Durchschnitt',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Row(
+    for (final drink in coffeeProvider.drinks) {
+      drinkCounts[drink.name] = (drinkCounts[drink.name] ?? 0) + 1;
+    }
+
+    // Sortiere nach Häufigkeit
+    final sortedDrinks = drinkCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final favoriteCount = min(3, sortedDrinks.length);
+
+    if (favoriteCount == 0) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: const Center(
+          child: Text('Noch keine Getränke getrunken'),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: List.generate(favoriteCount, (index) {
+          final entry = sortedDrinks[index];
+          final rank = index + 1;
+          String icon;
+
+          if (rank == 1) {
+            icon = '🥇';
+          } else if (rank == 2) {
+            icon = '🥈';
+          } else {
+            icon = '🥉';
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
               children: [
-                const Icon(
-                  Icons.coffee_outlined,
-                  size: 28,
-                  color: AppTheme.secondaryColor,
+                Text(
+                  icon,
+                  style: const TextStyle(fontSize: 20),
                 ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${avgDrinks.toStringAsFixed(1)} Tassen',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppTheme.secondaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    Text(
-                      '${avgConsumption.toStringAsFixed(0)} mg Koffein',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry.key,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        '${entry.value} mal getrunken',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.favorite,
+                  color: index == 0
+                      ? Colors.red
+                      : (index == 1 ? Colors.orange : Colors.amber),
+                  size: 20,
                 ),
               ],
             ),
-          ],
-        ),
+          );
+        }),
       ),
     );
   }
 
-  Widget _buildFavoriteDrinks(BuildContext context, CoffeeProvider provider) {
-    final favorites = provider.getFavoriteDrinks();
+  Widget _buildCaffeinePrognosis(
+      BuildContext context, CoffeeProvider coffeeProvider) {
+    // Zeige eine Prognose für die nächsten Stunden
+    final now = DateTime.now();
+    final timePoints = <DateTime>[];
+    final caffeineValues = <double>[];
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Lieblingsgetränke',
-              style: Theme.of(context).textTheme.titleLarge,
+    // Prognose für die nächsten 12 Stunden
+    for (int i = 0; i <= 12; i++) {
+      final time = now.add(Duration(hours: i));
+      timePoints.add(time);
+      caffeineValues.add(coffeeProvider.predictCaffeineLevel(time));
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      height: 220,
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: Colors.grey[200]!,
+              strokeWidth: 1,
+              dashArray: [5, 5],
             ),
-            const SizedBox(height: 16),
-            if (favorites.isEmpty)
-              Text(
-                'Noch keine Daten',
-                style: Theme.of(context).textTheme.bodyMedium,
-              )
-            else
-              ...favorites.take(3).map((drink) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.star,
-                        color: AppTheme.accentColor,
-                        size: 18,
+          ),
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  if (value % 3 == 0 && value.toInt() < timePoints.length) {
+                    final time = timePoints[value.toInt()];
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      child: Text(
+                        '${time.hour}:00',
+                        style: TextStyle(
+                          color: AppTheme.secondaryTextColor,
+                          fontSize: 12,
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        drink,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+                reservedSize: 28,
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text(
+                      value.toInt().toString(),
+                      style: TextStyle(
+                        color: AppTheme.secondaryTextColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  );
+                },
+                interval: 100,
+                reservedSize: 40,
+              ),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              tooltipBgColor: AppTheme.primaryColor.withOpacity(0.8),
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  final time = timePoints[spot.x.toInt()];
+                  return LineTooltipItem(
+                    '${time.hour}:00\n',
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '${spot.y.toInt()} mg',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
                     ],
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList();
+              },
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: List.generate(timePoints.length, (index) {
+                return FlSpot(index.toDouble(), caffeineValues[index]);
+              }),
+              isCurved: true,
+              color: AppTheme.primaryColor,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                color: AppTheme.primaryColor.withOpacity(0.1),
+              ),
+            ),
           ],
+          minY: 0,
         ),
       ),
     );
@@ -394,95 +712,99 @@ class CoffeeCupPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cupWidth = size.width * 0.8;
-    final cupHeight = size.height * 0.75;
-    final handleWidth = size.width * 0.2;
-    final handleHeight = size.height * 0.4;
+    final width = size.width;
+    final height = size.height;
 
-    // Griff zeichnen
-    final handlePaint = Paint()
-      ..color = AppTheme.primaryColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
+    // Definiere die Tasse
+    final cupPath = Path()
+      ..moveTo(width * 0.2, height * 0.2)
+      ..lineTo(width * 0.2, height * 0.8)
+      ..quadraticBezierTo(width * 0.2, height * 0.9, width * 0.3, height * 0.9)
+      ..lineTo(width * 0.7, height * 0.9)
+      ..quadraticBezierTo(width * 0.8, height * 0.9, width * 0.8, height * 0.8)
+      ..lineTo(width * 0.8, height * 0.2)
+      ..close();
 
-    final handlePath = Path()
-      ..moveTo(size.width * 0.75, size.height * 0.3)
-      ..quadraticBezierTo(size.width * 0.95, size.height * 0.4,
-          size.width * 0.75, size.height * 0.6);
-
-    canvas.drawPath(handlePath, handlePaint);
-
-    // Tasse zeichnen
+    // Zeichne die Tasse
     final cupPaint = Paint()
-      ..color = AppTheme.primaryColor
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(cupPath, cupPaint);
+
+    // Zeichne den Tassenrand
+    final borderPaint = Paint()
+      ..color = Colors.grey[300]!
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
+      ..strokeWidth = 2;
 
-    final cupRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(size.width * 0.45, size.height * 0.5),
-        width: cupWidth,
-        height: cupHeight,
-      ),
-      const Radius.circular(6),
-    );
+    canvas.drawPath(cupPath, borderPaint);
 
-    canvas.drawRRect(cupRect, cupPaint);
+    // Zeichne den Henkel
+    final handlePath = Path()
+      ..moveTo(width * 0.8, height * 0.3)
+      ..quadraticBezierTo(
+          width * 0.95, height * 0.3, width * 0.95, height * 0.5)
+      ..quadraticBezierTo(
+          width * 0.95, height * 0.7, width * 0.8, height * 0.7);
 
-    // Kaffee Füllung
+    canvas.drawPath(handlePath, borderPaint);
+
+    // Zeichne den Kaffee in der Tasse
     if (fillLevel > 0) {
-      final fillHeight = cupHeight * fillLevel;
-      final coffeeColor = AppTheme.primaryColor.withOpacity(0.7);
+      final fillHeight = height * 0.7 - (height * 0.5 * fillLevel);
+      final coffeePath = Path()
+        ..moveTo(width * 0.2, fillHeight)
+        ..lineTo(width * 0.2, height * 0.8)
+        ..quadraticBezierTo(
+            width * 0.2, height * 0.9, width * 0.3, height * 0.9)
+        ..lineTo(width * 0.7, height * 0.9)
+        ..quadraticBezierTo(
+            width * 0.8, height * 0.9, width * 0.8, height * 0.8)
+        ..lineTo(width * 0.8, fillHeight)
+        ..close();
 
       final coffeePaint = Paint()
-        ..color = coffeeColor
+        ..color = AppTheme.primaryColor
         ..style = PaintingStyle.fill;
 
-      final coffeeRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          size.width * 0.45 - cupWidth / 2,
-          size.height * 0.5 + cupHeight / 2 - fillHeight,
-          cupWidth,
-          fillHeight,
-        ),
-        const Radius.circular(6),
-      );
-
-      canvas.drawRRect(coffeeRect, coffeePaint);
+      canvas.drawPath(coffeePath, coffeePaint);
     }
 
-    // Dampf zeichnen, wenn die Tasse ziemlich voll ist
-    if (fillLevel > 0.7) {
+    // Zeichne Dampf, wenn der Kaffee heiß ist (hoher Koffeingehalt)
+    if (fillLevel > 0.8) {
       final steamPaint = Paint()
-        ..color = Colors.grey.withOpacity(0.5)
+        ..color = Colors.grey[300]!
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0;
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round;
 
-      final random = Random();
+      // Linker Dampfstrom
+      final leftSteamPath = Path()
+        ..moveTo(width * 0.35, height * 0.2)
+        ..quadraticBezierTo(
+            width * 0.3, height * 0.1, width * 0.35, height * 0.05);
 
-      // Mehrere Dampfwölkchen
-      for (int i = 0; i < 3; i++) {
-        final startX = size.width * (0.35 + 0.1 * i);
-        final startY = size.height * 0.1;
+      // Mittlerer Dampfstrom
+      final middleSteamPath = Path()
+        ..moveTo(width * 0.5, height * 0.2)
+        ..quadraticBezierTo(
+            width * 0.55, height * 0.05, width * 0.5, height * 0);
 
-        final steamPath = Path()
-          ..moveTo(startX, startY + size.height * 0.1)
-          ..cubicTo(
-            startX - 5 + random.nextDouble() * 10,
-            startY - 5 + random.nextDouble() * 10,
-            startX + 5 + random.nextDouble() * 10,
-            startY - 15 + random.nextDouble() * 10,
-            startX,
-            startY - 20,
-          );
+      // Rechter Dampfstrom
+      final rightSteamPath = Path()
+        ..moveTo(width * 0.65, height * 0.2)
+        ..quadraticBezierTo(
+            width * 0.7, height * 0.1, width * 0.65, height * 0.05);
 
-        canvas.drawPath(steamPath, steamPaint);
-      }
+      canvas.drawPath(leftSteamPath, steamPaint);
+      canvas.drawPath(middleSteamPath, steamPaint);
+      canvas.drawPath(rightSteamPath, steamPaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
+  bool shouldRepaint(covariant CoffeeCupPainter oldDelegate) {
+    return oldDelegate.fillLevel != fillLevel;
   }
 }
