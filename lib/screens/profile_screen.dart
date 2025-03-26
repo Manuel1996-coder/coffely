@@ -8,6 +8,13 @@ import '../providers/coffee_provider.dart';
 import '../models/coffee_drink.dart';
 import '../theme/app_theme.dart';
 
+// Kaffeefarben - weichere, pastellige Töne
+const Color accentColor = Color(0xFF8D6E63); // Sanftes Braun als Hauptfarbe
+const Color lightAccentColor = Color(0xFFBCAAA4); // Helles Braun
+const Color darkAccentColor = Color(0xFF5D4037); // Dunkles Braun
+const Color warningColor = Color(0xFFE6A278); // Warmes Orange als Warnfarbe
+const Color successColor = Color(0xFF81C784); // Sanftes Grün für Erfolg
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -22,8 +29,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _showAppBarTitle = false;
   String? _profileImagePath;
   final ImagePicker _picker = ImagePicker();
+  String _userName = 'Kaffeeliebhaber';
+  String _userEmail = 'kaffee@beispiel.de';
+  DateTime _joinDate = DateTime(2024, 3, 1);
 
-  // Füge separate Controller für die Tab-Inhalte hinzu
+  // Separate Controller für die Tab-Inhalte
   final _overviewScrollController = ScrollController();
   final _historyScrollController = ScrollController();
   final _settingsScrollController = ScrollController();
@@ -33,14 +43,27 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _scrollController.addListener(_onScroll);
-    _loadProfileImage();
+    _loadUserData();
   }
 
-  Future<void> _loadProfileImage() async {
+  Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _profileImagePath = prefs.getString('profile_image_path');
+      _userName = prefs.getString('user_name') ?? 'Kaffeeliebhaber';
+      _userEmail = prefs.getString('user_email') ?? 'kaffee@beispiel.de';
+      final joinDateStr = prefs.getString('join_date');
+      if (joinDateStr != null) {
+        _joinDate = DateTime.parse(joinDateStr);
+      }
     });
+  }
+
+  Future<void> _saveUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_name', _userName);
+    await prefs.setString('user_email', _userEmail);
+    await prefs.setString('join_date', _joinDate.toIso8601String());
   }
 
   Future<void> _saveProfileImage(String? path) async {
@@ -90,11 +113,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 SliverAppBar(
                   expandedHeight: 240,
                   pinned: true,
-                  backgroundColor: AppTheme.primaryColor,
+                  backgroundColor: accentColor,
                   flexibleSpace: FlexibleSpaceBar(
                     title: AnimatedOpacity(
                       opacity: _showAppBarTitle ? 1.0 : 0.0,
-                      duration: AppTheme.animationDuration,
+                      duration: const Duration(milliseconds: 200),
                       child: const Text('Dein Profil'),
                     ),
                     titlePadding: const EdgeInsets.only(bottom: 52),
@@ -103,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   bottom: PreferredSize(
                     preferredSize: const Size.fromHeight(48),
                     child: Container(
-                      color: AppTheme.primaryColor,
+                      color: accentColor,
                       child: TabBar(
                         controller: _tabController,
                         indicatorColor: Colors.white,
@@ -126,9 +149,21 @@ class _ProfileScreenState extends State<ProfileScreen>
             body: TabBarView(
               controller: _tabController,
               children: [
-                _buildOverviewTab(provider),
-                _buildHistoryTab(provider),
-                _buildSettingsTab(),
+                SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: _buildOverviewTab(provider),
+                ),
+                SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: _buildHistoryTab(provider),
+                ),
+                SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: _buildSettingsTab(provider),
+                ),
               ],
             ),
           ),
@@ -144,8 +179,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            AppTheme.primaryColor.withOpacity(0.8),
-            AppTheme.primaryColor,
+            accentColor.withOpacity(0.8),
+            accentColor,
           ],
         ),
       ),
@@ -191,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 child: Icon(
                                   Icons.person,
                                   size: 50,
-                                  color: AppTheme.primaryColor,
+                                  color: accentColor,
                                 ),
                               ),
                       ),
@@ -202,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
+                            color: accentColor,
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                           ),
@@ -219,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(height: 12),
               Text(
-                'Kaffeeliebhaber',
+                _userName,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -229,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
-                  'Seit dem 01.03.2024 dabei',
+                  'Seit dem ${_formatDate(_joinDate)} dabei',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Colors.white.withOpacity(0.9),
                       ),
@@ -252,117 +287,149 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     final mostPopularDrink = _getMostPopularDrink(provider);
     final weekdayWithMostCoffee = _getWeekdayWithMostCoffee(provider);
+    final averageConsumption = provider.getAverageDailyConsumption();
+    final caffeineLimit = provider.caffeineLimit;
 
-    return SingleChildScrollView(
+    return ListView(
       controller: _overviewScrollController,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Deine Kaffeegewohnheiten',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 24),
-
-          // Stats cards
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  'Getränke',
-                  totalDrinks.toString(),
-                  Icons.local_cafe,
-                ),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
+      children: [
+        Text(
+          'Deine Kaffeegewohnheiten',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: darkAccentColor,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  context,
-                  'Koffein',
-                  '${totalCaffeine.toStringAsFixed(0)} mg',
-                  Icons.bolt,
-                ),
+        ),
+        const SizedBox(height: 24),
+
+        // Stats cards
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                context,
+                'Getränke',
+                totalDrinks.toString(),
+                Icons.local_cafe,
+                accentColor,
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                'Koffein',
+                '${totalCaffeine.toStringAsFixed(0)} mg',
+                Icons.bolt,
+                warningColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
 
-          // Chart section
-          Text(
-            'Monatsübersicht',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          _buildMonthlyChart(provider),
-          const SizedBox(height: 24),
+        // Chart section
+        Text(
+          'Monatsübersicht',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: darkAccentColor,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 16),
+        _buildMonthlyChart(provider),
+        const SizedBox(height: 24),
 
-          // Insights
-          Text(
-            'Interessante Fakten',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          _buildInsightCard(
-            context,
-            'Lieblingsgetränk',
-            mostPopularDrink,
-            'Du hast dieses Getränk am häufigsten getrunken',
-            Icons.favorite,
-            AppTheme.accentColor,
-          ),
-          const SizedBox(height: 12),
-          _buildInsightCard(
-            context,
-            'Kaffee-Wochentag',
-            weekdayWithMostCoffee,
-            'An diesem Tag trinkst du am meisten Kaffee',
-            Icons.date_range,
-            AppTheme.secondaryColor,
-          ),
-          const SizedBox(height: 12),
-          _buildInsightCard(
-            context,
-            'Deine Koffein-Bilanz',
-            'Moderat',
-            'Dein Koffeinkonsum liegt im gesunden Bereich',
-            Icons.check_circle,
-            AppTheme.successColor,
-          ),
-          const SizedBox(height: 24),
+        // Insights
+        Text(
+          'Interessante Fakten',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: darkAccentColor,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 16),
+        _buildInsightCard(
+          context,
+          'Lieblingsgetränk',
+          mostPopularDrink,
+          'Du hast dieses Getränk am häufigsten getrunken',
+          Icons.favorite,
+          accentColor,
+        ),
+        const SizedBox(height: 12),
+        _buildInsightCard(
+          context,
+          'Kaffee-Wochentag',
+          weekdayWithMostCoffee,
+          'An diesem Tag trinkst du am meisten Kaffee',
+          Icons.date_range,
+          lightAccentColor,
+        ),
+        const SizedBox(height: 12),
+        _buildInsightCard(
+          context,
+          'Deine Koffein-Bilanz',
+          averageConsumption > caffeineLimit ? 'Über dem Limit' : 'Moderat',
+          'Durchschnittlich ${averageConsumption.toStringAsFixed(0)} mg pro Tag',
+          Icons.check_circle,
+          averageConsumption > caffeineLimit ? warningColor : successColor,
+        ),
+        const SizedBox(height: 24),
 
-          // Achievements
-          Text(
-            'Deine Erfolge',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          _buildAchievementProgress(
-            context,
-            'Kaffee-Enthusiast',
-            'Trinke 100 Tassen Kaffee',
-            0.67,
-          ),
-          const SizedBox(height: 12),
-          _buildAchievementProgress(
-            context,
-            'Vielfältiger Geschmack',
-            'Probiere 10 verschiedene Kaffeesorten',
-            0.8,
-          ),
-        ],
-      ),
+        // Achievements
+        Text(
+          'Deine Erfolge',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: darkAccentColor,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 16),
+        _buildAchievementProgress(
+          context,
+          'Kaffee-Enthusiast',
+          'Trinke 100 Tassen Kaffee',
+          totalDrinks / 100,
+        ),
+        const SizedBox(height: 12),
+        _buildAchievementProgress(
+          context,
+          'Vielfältiger Geschmack',
+          'Probiere 10 verschiedene Kaffeesorten',
+          provider.getFavoriteDrinks().length / 10,
+        ),
+      ],
     );
   }
 
   Widget _buildStatCard(
-      BuildContext context, String title, String value, IconData icon) {
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            color.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -374,13 +441,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Icon(
                     icon,
-                    color: AppTheme.primaryColor,
+                    color: color,
                     size: 20,
                   ),
                 ),
@@ -388,14 +455,14 @@ class _ProfileScreenState extends State<ProfileScreen>
               const Spacer(),
               const Icon(
                 Icons.trending_up,
-                color: AppTheme.successColor,
+                color: successColor,
                 size: 20,
               ),
               const SizedBox(width: 4),
               Text(
                 '+12%',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.successColor,
+                      color: successColor,
                       fontWeight: FontWeight.bold,
                     ),
               ),
@@ -406,6 +473,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             value,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: darkAccentColor,
                 ),
           ),
           const SizedBox(height: 4),
@@ -422,21 +490,28 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildMonthlyChart(CoffeeProvider provider) {
     final List<FlSpot> spots = List.generate(30, (index) {
-      // In einer echten App würde hier die tatsächliche Anzahl der getrunkenen Tassen pro Tag stehen
-      // Für dieses Beispiel simulieren wir zufällige Daten
-      final random = index % 3 == 0
-          ? 4.0
-          : (index % 7 == 0 ? 5.0 : (index % 2 == 0 ? 3.0 : 2.0));
-      return FlSpot(index.toDouble(), random);
+      final date = DateTime.now().subtract(Duration(days: 29 - index));
+      final drinks = provider.getDrinksForDay(date);
+      final totalCaffeine = drinks.fold<double>(
+        0,
+        (sum, drink) => sum + drink.caffeineAmount,
+      );
+      return FlSpot(index.toDouble(), totalCaffeine);
     });
 
     return AspectRatio(
       aspectRatio: 1.7,
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.cardColor,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: AppTheme.cardShadow,
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         padding: const EdgeInsets.fromLTRB(8, 24, 20, 24),
         child: LineChart(
@@ -444,7 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             gridData: FlGridData(
               show: true,
               drawVerticalLine: false,
-              horizontalInterval: 1,
+              horizontalInterval: 100,
               getDrawingHorizontalLine: (value) {
                 return FlLine(
                   color: Colors.grey[300],
@@ -461,42 +536,35 @@ class _ProfileScreenState extends State<ProfileScreen>
                   reservedSize: 30,
                   interval: 5,
                   getTitlesWidget: (value, meta) {
-                    const days = ['1', '5', '10', '15', '20', '25', '30'];
-                    final index = value ~/ 5;
-                    if (index >= 0 && index < days.length) {
-                      return SideTitleWidget(
-                        axisSide: meta.axisSide,
-                        child: Text(
-                          days[index],
-                          style: TextStyle(
-                            color: AppTheme.secondaryTextColor,
-                            fontSize: 12,
-                          ),
+                    final date = DateTime.now().subtract(Duration(days: 29 - value.toInt()));
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      child: Text(
+                        '${date.day}.${date.month}',
+                        style: TextStyle(
+                          color: AppTheme.secondaryTextColor,
+                          fontSize: 12,
                         ),
-                      );
-                    }
-                    return const SizedBox.shrink();
+                      ),
+                    );
                   },
                 ),
               ),
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
-                  interval: 1,
+                  interval: 100,
                   getTitlesWidget: (value, meta) {
-                    if (value % 1 == 0) {
-                      return SideTitleWidget(
-                        axisSide: meta.axisSide,
-                        child: Text(
-                          value.toInt().toString(),
-                          style: TextStyle(
-                            color: AppTheme.secondaryTextColor,
-                            fontSize: 12,
-                          ),
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
+                      child: Text(
+                        value.toInt().toString(),
+                        style: TextStyle(
+                          color: AppTheme.secondaryTextColor,
+                          fontSize: 12,
                         ),
-                      );
-                    }
-                    return const SizedBox.shrink();
+                      ),
+                    );
                   },
                   reservedSize: 30,
                 ),
@@ -512,30 +580,32 @@ class _ProfileScreenState extends State<ProfileScreen>
             minX: 0,
             maxX: 29,
             minY: 0,
-            maxY: 6,
+            maxY: provider.caffeineLimit,
             lineBarsData: [
               LineChartBarData(
                 spots: spots,
                 isCurved: true,
-                color: AppTheme.primaryColor,
+                color: accentColor,
                 barWidth: 3,
                 isStrokeCapRound: true,
                 dotData: const FlDotData(show: false),
                 belowBarData: BarAreaData(
                   show: true,
-                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  color: accentColor.withOpacity(0.1),
                 ),
               ),
             ],
             lineTouchData: LineTouchData(
               touchTooltipData: LineTouchTooltipData(
-                tooltipBgColor: AppTheme.primaryColor.withOpacity(0.8),
+                tooltipBgColor: accentColor.withOpacity(0.8),
                 getTooltipItems: (touchedSpots) {
                   return touchedSpots.map((spot) {
                     return LineTooltipItem(
-                      '${spot.y.toInt()} Tassen',
+                      '${spot.y.toInt()} mg',
                       const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     );
                   }).toList();
                 },
@@ -557,9 +627,23 @@ class _ProfileScreenState extends State<ProfileScreen>
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            color.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -593,7 +677,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
                 Text(
                   value,
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: darkAccentColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
@@ -619,9 +706,23 @@ class _ProfileScreenState extends State<ProfileScreen>
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            accentColor.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -635,7 +736,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                   children: [
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: darkAccentColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     Text(
                       description,
@@ -649,7 +753,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               Text(
                 '${(progress * 100).toInt()}%',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppTheme.primaryColor,
+                      color: accentColor,
                       fontWeight: FontWeight.bold,
                     ),
               ),
@@ -659,7 +763,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           LinearProgressIndicator(
             value: progress,
             backgroundColor: Colors.grey[200],
-            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
             minHeight: 8,
             borderRadius: BorderRadius.circular(4),
           ),
@@ -672,8 +776,24 @@ class _ProfileScreenState extends State<ProfileScreen>
     final drinks = provider.drinks;
 
     if (drinks.isEmpty) {
-      return const Center(
-        child: Text('Noch keine Kaffees getrunken'),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.coffee_outlined,
+              size: 64,
+              color: accentColor.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Noch keine Kaffees getrunken',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppTheme.secondaryTextColor,
+                  ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -693,7 +813,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     return ListView.builder(
       controller: _historyScrollController,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
       itemCount: sortedDates.length,
       itemBuilder: (context, index) {
         final date = sortedDates[index];
@@ -708,6 +828,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 date,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: darkAccentColor,
                     ),
               ),
             ),
@@ -725,9 +846,23 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            accentColor.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -735,22 +870,30 @@ class _ProfileScreenState extends State<ProfileScreen>
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withOpacity(0.1),
+            color: accentColor.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Center(
             child: Icon(
               Icons.coffee,
-              color: AppTheme.primaryColor,
+              color: accentColor,
             ),
           ),
         ),
         title: Text(
           drink.name,
-          style: Theme.of(context).textTheme.titleMedium,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: darkAccentColor,
+                fontWeight: FontWeight.bold,
+              ),
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Text(time),
+        subtitle: Text(
+          time,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.secondaryTextColor,
+              ),
+        ),
         trailing: SizedBox(
           width: 70,
           child: Column(
@@ -761,6 +904,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 '${drink.caffeineAmount.toStringAsFixed(0)} mg',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: accentColor,
                     ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -777,16 +921,16 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildSettingsTab() {
+  Widget _buildSettingsTab(CoffeeProvider provider) {
     return ListView(
       controller: _settingsScrollController,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 80),
       children: [
         _buildSettingsCategory('Account'),
         _buildSettingsItem(
           'Profil bearbeiten',
           Icons.person,
-          AppTheme.primaryColor,
+          accentColor,
           onTap: () {
             _showProfileEditDialog();
           },
@@ -794,7 +938,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _buildSettingsItem(
           'Benachrichtigungen',
           Icons.notifications,
-          AppTheme.accentColor,
+          lightAccentColor,
           onTap: () {
             _showNotificationsSettings();
           },
@@ -802,7 +946,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _buildSettingsItem(
           'Datenschutz',
           Icons.lock,
-          AppTheme.secondaryColor,
+          darkAccentColor,
           onTap: () {
             _showPrivacySettings();
           },
@@ -811,7 +955,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _buildSettingsItem(
           'Einheiten',
           Icons.straighten,
-          Colors.teal,
+          accentColor,
           onTap: () {
             _showUnitsSettings();
           },
@@ -819,7 +963,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _buildSettingsItem(
           'Koffeinlimit anpassen',
           Icons.warning,
-          Colors.orange,
+          warningColor,
           onTap: () {
             _showCaffeineLimitDialog();
           },
@@ -828,7 +972,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _buildSettingsItem(
           'Über uns',
           Icons.info,
-          Colors.blue,
+          accentColor,
           onTap: () {
             _showAboutDialog();
           },
@@ -836,11 +980,14 @@ class _ProfileScreenState extends State<ProfileScreen>
         _buildSettingsItem(
           'Bewerten',
           Icons.star,
-          Colors.amber,
+          accentColor,
           onTap: () {
             // Diese Funktion würde normalerweise zum App Store / Play Store führen
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Öffne Store zum Bewerten')),
+              SnackBar(
+                content: const Text('Öffne Store zum Bewerten'),
+                backgroundColor: accentColor,
+              ),
             );
           },
         ),
@@ -853,7 +1000,10 @@ class _ProfileScreenState extends State<ProfileScreen>
       padding: const EdgeInsets.only(top: 16, bottom: 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleLarge,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: darkAccentColor,
+              fontWeight: FontWeight.bold,
+            ),
       ),
     );
   }
@@ -868,9 +1018,23 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            color.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -900,11 +1064,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: darkAccentColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
                 trailing ??
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_ios,
                       color: AppTheme.secondaryTextColor,
                       size: 16,
@@ -1013,15 +1180,6 @@ class _ProfileScreenState extends State<ProfileScreen>
               children: [
                 _buildImageSourceOption(
                   context: context,
-                  icon: Icons.photo_camera,
-                  title: 'Kamera',
-                  onTap: () {
-                    Navigator.pop(context);
-                    _getImage(ImageSource.camera);
-                  },
-                ),
-                _buildImageSourceOption(
-                  context: context,
                   icon: Icons.photo_library,
                   title: 'Galerie',
                   onTap: () {
@@ -1117,6 +1275,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _showProfileEditDialog() {
+    final nameController = TextEditingController(text: _userName);
+    final emailController = TextEditingController(text: _userEmail);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1125,19 +1286,19 @@ class _ProfileScreenState extends State<ProfileScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
+              controller: nameController,
               decoration: const InputDecoration(
                 labelText: 'Name',
                 hintText: 'Dein Name',
               ),
-              controller: TextEditingController(text: 'Kaffeeliebhaber'),
             ),
             const SizedBox(height: 16),
             TextField(
+              controller: emailController,
               decoration: const InputDecoration(
                 labelText: 'Email',
                 hintText: 'Deine Email-Adresse',
               ),
-              controller: TextEditingController(text: 'kaffee@beispiel.de'),
             ),
           ],
         ),
@@ -1148,9 +1309,17 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           FilledButton(
             onPressed: () {
+              setState(() {
+                _userName = nameController.text;
+                _userEmail = emailController.text;
+              });
+              _saveUserData();
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profil aktualisiert')),
+                const SnackBar(
+                  content: Text('Profil aktualisiert'),
+                  backgroundColor: accentColor,
+                ),
               );
             },
             child: const Text('Speichern'),
@@ -1179,7 +1348,10 @@ class _ProfileScreenState extends State<ProfileScreen>
               children: [
                 Text(
                   'Benachrichtigungen',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: darkAccentColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 24),
                 SwitchListTile(
@@ -1207,9 +1379,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                     onPressed: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text(
-                                'Benachrichtigungseinstellungen gespeichert')),
+                        SnackBar(
+                          content: const Text(
+                              'Benachrichtigungseinstellungen gespeichert'),
+                          backgroundColor: accentColor,
+                        ),
                       );
                     },
                     child: const Text('Speichern'),
@@ -1242,7 +1416,10 @@ class _ProfileScreenState extends State<ProfileScreen>
             children: [
               Text(
                 'Datenschutzeinstellungen',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: darkAccentColor,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 24),
               const Text('Wir nehmen den Schutz deiner Daten ernst. '
@@ -1256,8 +1433,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 onPressed: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Datenschutzeinstellungen gespeichert')),
+                    SnackBar(
+                      content: const Text(
+                          'Datenschutzeinstellungen gespeichert'),
+                      backgroundColor: accentColor,
+                    ),
                   );
                 },
                 child: const Text('Speichern'),
@@ -1274,7 +1454,12 @@ class _ProfileScreenState extends State<ProfileScreen>
       builder: (context, setState) {
         bool value = initialValue;
         return SwitchListTile(
-          title: Text(title),
+          title: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: darkAccentColor,
+                ),
+          ),
           value: value,
           onChanged: (newValue) {
             setState(() => value = newValue);
@@ -1285,48 +1470,70 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _showUnitsSettings() {
+    String selectedUnit = 'mg';
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Einheiten'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: const Text('Milligramm (mg)'),
-              value: 'mg',
-              groupValue: 'mg', // Aktuell ausgewählter Wert
-              onChanged: (value) {},
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(
+              'Einheiten',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: darkAccentColor,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-            RadioListTile<String>(
-              title: const Text('Gramm (g)'),
-              value: 'g',
-              groupValue: 'mg',
-              onChanged: (value) {},
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<String>(
+                  title: const Text('Milligramm (mg)'),
+                  value: 'mg',
+                  groupValue: selectedUnit,
+                  onChanged: (value) {
+                    setState(() => selectedUnit = value!);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Gramm (g)'),
+                  value: 'g',
+                  groupValue: selectedUnit,
+                  onChanged: (value) {
+                    setState(() => selectedUnit = value!);
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Abbrechen'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Einheiten aktualisiert')),
-              );
-            },
-            child: const Text('Speichern'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Abbrechen'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Einheit auf ${selectedUnit == 'mg' ? 'Milligramm' : 'Gramm'} geändert',
+                      ),
+                      backgroundColor: accentColor,
+                    ),
+                  );
+                },
+                child: const Text('Speichern'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   void _showCaffeineLimitDialog() {
-    double caffeineLimit = 400.0; // Standard-Wert
+    final provider = Provider.of<CoffeeProvider>(context, listen: false);
+    double caffeineLimit = provider.caffeineLimit;
 
     showDialog(
       context: context,
@@ -1357,7 +1564,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       caffeineLimit = value;
                     });
                   },
-                  activeColor: AppTheme.primaryColor,
+                  activeColor: accentColor,
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -1375,11 +1582,15 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               FilledButton(
                 onPressed: () {
+                  provider.setCaffeineLimit(caffeineLimit);
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text(
-                            'Koffeinlimit auf ${caffeineLimit.toStringAsFixed(0)} mg gesetzt')),
+                      content: Text(
+                        'Koffeinlimit auf ${caffeineLimit.toStringAsFixed(0)} mg gesetzt',
+                      ),
+                      backgroundColor: accentColor,
+                    ),
                   );
                 },
                 child: const Text('Speichern'),
@@ -1397,9 +1608,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.coffee,
-              color: AppTheme.primaryColor,
+              color: accentColor,
               size: 36,
             ),
             const SizedBox(width: 12),
@@ -1407,10 +1618,18 @@ class _ProfileScreenState extends State<ProfileScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Coffely'),
+                Text(
+                  'Coffely',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: darkAccentColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
                 Text(
                   'Version 1.0.0',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.secondaryTextColor,
+                      ),
                 ),
               ],
             ),
@@ -1421,27 +1640,47 @@ class _ProfileScreenState extends State<ProfileScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                  'Coffely ist deine persönliche Kaffee-Tracking-App, die dir hilft, '
-                  'deinen Kaffeekonsum zu überwachen und zu optimieren.'),
+              Text(
+                'Coffely ist deine persönliche Kaffee-Tracking-App, die dir hilft, '
+                'deinen Kaffeekonsum zu überwachen und zu optimieren.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.secondaryTextColor,
+                    ),
+              ),
               const SizedBox(height: 12),
-              const Text(
-                  'Mit Coffely kannst du deine tägliche Koffeinaufnahme verfolgen, '
-                  'deinen Konsum visualisieren und ein gesundes Gleichgewicht finden. '
-                  'Die App bietet dir personalisierte Einblicke und hilft dir, deine Kaffeegewohnheiten besser zu verstehen.'),
+              Text(
+                'Mit Coffely kannst du deine tägliche Koffeinaufnahme verfolgen, '
+                'deinen Konsum visualisieren und ein gesundes Gleichgewicht finden. '
+                'Die App bietet dir personalisierte Einblicke und hilft dir, deine Kaffeegewohnheiten besser zu verstehen.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.secondaryTextColor,
+                    ),
+              ),
               const SizedBox(height: 12),
-              const Text('Features:\n'
-                  '• Tracking von Kaffeegetränken und Koffeingehalt\n'
-                  '• Persönliche Statistiken und Trends\n'
-                  '• Visualisierung deines Kaffeekonsums\n'
-                  '• Erinnerungen und Benachrichtigungen\n'
-                  '• Empfehlungen für einen ausgewogenen Koffeinkonsum'),
+              Text(
+                'Features:\n'
+                '• Tracking von Kaffeegetränken und Koffeingehalt\n'
+                '• Persönliche Statistiken und Trends\n'
+                '• Visualisierung deines Kaffeekonsums\n'
+                '• Erinnerungen und Benachrichtigungen\n'
+                '• Empfehlungen für einen ausgewogenen Koffeinkonsum',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.secondaryTextColor,
+                    ),
+              ),
               const SizedBox(height: 16),
-              const Text('Entwickelt mit ♥ und viel Kaffee in Deutschland'),
+              Text(
+                'Entwickelt mit ♥ und viel Kaffee in Deutschland',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.secondaryTextColor,
+                    ),
+              ),
               const SizedBox(height: 12),
               Text(
                 '©2024 Coffely Team',
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.secondaryTextColor,
+                    ),
               ),
             ],
           ),

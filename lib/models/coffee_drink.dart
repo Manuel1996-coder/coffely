@@ -16,25 +16,37 @@ class CoffeeDrink {
   // Vordefinierte Kaffeegetränke
   static final espresso = CoffeeDrink(
     name: 'Espresso',
-    caffeineAmount: 80,
+    caffeineAmount: 30,
     timestamp: DateTime(2023, 1, 1),
   );
 
   static final cappuccino = CoffeeDrink(
     name: 'Cappuccino',
-    caffeineAmount: 80,
+    caffeineAmount: 30,
     timestamp: DateTime(2023, 1, 1),
   );
 
   static final latteMacchiato = CoffeeDrink(
     name: 'Latte Macchiato',
-    caffeineAmount: 80,
+    caffeineAmount: 30,
     timestamp: DateTime(2023, 1, 1),
   );
 
   static final filterCoffee = CoffeeDrink(
     name: 'Filterkaffee',
-    caffeineAmount: 120,
+    caffeineAmount: 80,
+    timestamp: DateTime(2023, 1, 1),
+  );
+  
+  static final instantCoffee = CoffeeDrink(
+    name: 'Instant-Kaffee',
+    caffeineAmount: 80,
+    timestamp: DateTime(2023, 1, 1),
+  );
+  
+  static final cremaCoffee = CoffeeDrink(
+    name: 'Kaffee Crema',
+    caffeineAmount: 60,
     timestamp: DateTime(2023, 1, 1),
   );
 

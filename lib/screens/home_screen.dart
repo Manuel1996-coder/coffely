@@ -4,6 +4,7 @@ import '../providers/coffee_provider.dart';
 import '../models/coffee_drink.dart';
 import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../widgets/coffee_mascot.dart';
 import '../widgets/mascot_tooltip.dart';
 
@@ -22,6 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialisiere die Lokalisierungsdaten für Deutsch
+    initializeDateFormatting('de_DE', null);
+    
     // Zeige das Mascot mit Nachricht nach einer kurzen Verzögerung
     Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
@@ -93,10 +97,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 0, 0),
-                        child: Text(
-                          'Schnell hinzufügen',
-                          style: Theme.of(context).textTheme.headlineMedium,
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.add_circle,
+                              color: AppTheme.primaryColor,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Schnell hinzufügen',
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -114,33 +130,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 // Position für das Mascot
                 Positioned(
-                  bottom: 100,
-                  right: 20,
+                  bottom: 24,
+                  right: 24,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       if (_showTooltip)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: MascotTooltip(
-                            message: _mascotMessage,
-                            isVisible: _showTooltip,
-                            onDismiss: () {
-                              setState(() {
-                                _showTooltip = false;
-                              });
-                            },
-                          ),
+                        MascotTooltip(
+                          message: _mascotMessage,
+                          isVisible: _showTooltip,
+                          onDismiss: () => setState(() => _showTooltip = false),
                         ),
-                      BouncingMascot(
-                        child: CoffeeMascot(
-                          state: _mascotState,
-                          size: 80,
-                          onTap: _handleMascotTap,
-                          animationPath:
-                              MascotManager.getAnimationForState(_mascotState),
-                        ),
+                      const SizedBox(height: 8),
+                      CoffeeMascot(
+                        state: _mascotState,
+                        size: 80,
+                        animationPath: MascotManager.getAnimationForState(_mascotState),
+                        onTap: _handleMascotTap,
                       ),
                     ],
                   ),
@@ -150,12 +156,17 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           _showAddCustomDrinkModal(context);
         },
         backgroundColor: AppTheme.primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Getränk hinzufügen', style: TextStyle(color: Colors.white)),
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
     );
   }
@@ -171,51 +182,140 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       greeting = 'Guten Abend';
     }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              greeting,
-              style: Theme.of(context).textTheme.displayMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Zeit für Kaffee?',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.secondaryTextColor,
-                  ),
-            ),
-          ],
-        ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppTheme.cardColor,
-            shape: BoxShape.circle,
-            boxShadow: AppTheme.cardShadow,
+    
+    // Ermittle den Wochentag
+    final dayOfWeek = DateFormat('EEEE', 'de_DE').format(now);
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                // Hier später zum Profil navigieren
-              },
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Icon(
-                  Icons.person_outline,
-                  size: 26,
-                  color: AppTheme.primaryColor,
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.wb_sunny,
+                        color: AppTheme.primaryColor,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          greeting,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
+                          ),
+                        ),
+                        Text(
+                          'Heute ist $dayOfWeek',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.secondaryTextColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.coffee,
+                        color: AppTheme.primaryColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Zeit für Kaffee?',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // Hier später zum Profil navigieren
+                },
+                customBorder: const CircleBorder(),
+                child: const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Icon(
+                    Icons.person_outline,
+                    size: 30,
+                    color: AppTheme.primaryColor,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -230,6 +330,29 @@ class _HomeScreenState extends State<HomeScreen> {
     // Max Koffein für einen durchschnittlichen Erwachsenen
     const maxCaffeine = 400.0;
     final percentage = (totalCaffeine / maxCaffeine).clamp(0.0, 1.0);
+    
+    // Status Text basierend auf Koffeinkonsum
+    String statusText;
+    Color statusColor;
+    IconData statusIcon;
+    
+    if (percentage < 0.25) {
+      statusText = 'Niedriger Koffeinkonsum';
+      statusColor = Colors.green[600]!;
+      statusIcon = Icons.sentiment_satisfied_alt;
+    } else if (percentage < 0.5) {
+      statusText = 'Optimaler Koffeinkonsum';
+      statusColor = Colors.blue[600]!;
+      statusIcon = Icons.sentiment_very_satisfied;
+    } else if (percentage < 0.75) {
+      statusText = 'Erhöhter Koffeinkonsum';
+      statusColor = Colors.orange[600]!;
+      statusIcon = Icons.sentiment_neutral;
+    } else {
+      statusText = 'Hoher Koffeinkonsum';
+      statusColor = Colors.red[600]!;
+      statusIcon = percentage >= 1.0 ? Icons.sentiment_very_dissatisfied : Icons.sentiment_dissatisfied;
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -237,122 +360,288 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppTheme.cardShadow,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header der Karte
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Heute',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Text(
-                  DateFormat('dd.MM.yyyy').format(DateTime.now()),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: AppTheme.secondaryTextColor,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
                       ),
+                    ],
+                  ),
+                  child: Text(
+                    DateFormat('dd.MM.yyyy').format(DateTime.now()),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+          
+          // Hauptinhalt der Karte
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStatItem(
-                  context,
-                  '${todayDrinks.length}',
-                  'Getränke',
-                  Icons.coffee,
+                // Statistik-Boxen
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildEnhancedStatItem(
+                        context,
+                        '${todayDrinks.length}',
+                        'Getränke heute',
+                        Icons.coffee,
+                        AppTheme.primaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildEnhancedStatItem(
+                        context,
+                        '${totalCaffeine.toStringAsFixed(0)} mg',
+                        'Koffein heute',
+                        Icons.bolt_outlined,
+                        statusColor,
+                      ),
+                    ),
+                  ],
                 ),
-                _buildStatItem(
-                  context,
-                  '${totalCaffeine.toStringAsFixed(0)} mg',
-                  'Koffein',
-                  Icons.bolt_outlined,
+                
+                const SizedBox(height: 24),
+                
+                // Status-Anzeige
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        statusIcon,
+                        color: statusColor,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              statusText,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: statusColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '${(percentage * 100).toStringAsFixed(0)}% des täglichen Limits',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
                 ),
+                
+                const SizedBox(height: 16),
+                
+                // Fortschrittsbalken
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: percentage,
+                        minHeight: 16,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            '400 mg',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: percentage > 0.7 ? Colors.white : Colors.black54,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                // Kaffeekonsum-Tipps
+                if (percentage > 0.75)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.red[100]!,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.red[400],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Vielleicht eine Pause vom Kaffee einlegen?',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.red[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                
+                if (todayDrinks.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.blue[100]!,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.blue[400],
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Noch keinen Kaffee heute? Zeit für eine Tasse!',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
-            const SizedBox(height: 20),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: percentage,
-                minHeight: 12,
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                    _getCaffeineColor(percentage)),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '0 mg',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                Text(
-                  '400 mg',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Color _getCaffeineColor(double percentage) {
-    if (percentage < 0.25) {
-      return Colors.green[600]!;
-    } else if (percentage < 0.5) {
-      return Colors.orange[600]!;
-    } else if (percentage < 0.75) {
-      return Colors.deepOrange[600]!;
-    } else {
-      return Colors.red[600]!;
-    }
-  }
-
-  Widget _buildStatItem(
+  Widget _buildEnhancedStatItem(
     BuildContext context,
     String value,
     String label,
     IconData icon,
+    Color color,
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 28,
-            color: AppTheme.primaryColor,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: color,
+            ),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -382,6 +671,16 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: Icons.coffee_outlined,
         fallbackIcon: Icons.coffee_outlined,
       ),
+      _QuickAddOption(
+        drink: CoffeeDrink.instantCoffee,
+        icon: Icons.coffee,
+        fallbackIcon: Icons.coffee,
+      ),
+      _QuickAddOption(
+        drink: CoffeeDrink.cremaCoffee,
+        icon: Icons.coffee_outlined,
+        fallbackIcon: Icons.coffee_outlined,
+      ),
     ];
 
     return SizedBox(
@@ -408,7 +707,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _QuickAddOption option,
   ) {
     return Container(
-      width: 140,
+      width: 130,
       margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
@@ -448,12 +747,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     color: AppTheme.primaryColor.withOpacity(0.1),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryColor.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Center(
                     child: _buildDrinkIcon(option),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Text(
                   option.drink.name,
                   style: Theme.of(context).textTheme.titleMedium,
@@ -461,11 +767,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${option.drink.caffeineAmount.toInt()} mg',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${option.drink.caffeineAmount.toInt()} mg',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ],
             ),
@@ -495,15 +811,42 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               'Kürzlich getrunken',
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             if (recentDrinks.isNotEmpty)
-              TextButton.icon(
-                onPressed: () {
-                  // Später: Alle Getränke anzeigen
-                },
-                icon: const Icon(Icons.history, size: 16),
-                label: const Text('Alle anzeigen'),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TextButton.icon(
+                  onPressed: () {
+                    // Später: Alle Getränke anzeigen
+                  },
+                  icon: Icon(
+                    Icons.history, 
+                    size: 16,
+                    color: AppTheme.primaryColor,
+                  ),
+                  label: Text(
+                    'Alle anzeigen',
+                    style: TextStyle(
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
               ),
           ],
         ),
@@ -546,6 +889,16 @@ class _HomeScreenState extends State<HomeScreen> {
         else
           Column(
             children: recentDrinks.take(3).map((drink) {
+              // Bestimme Farbe basierend auf Koffeinmenge
+              Color accentColor;
+              if (drink.caffeineAmount <= 30) {
+                accentColor = Colors.green[600]!;
+              } else if (drink.caffeineAmount <= 60) {
+                accentColor = Colors.blue[600]!;
+              } else {
+                accentColor = Colors.orange[600]!;
+              }
+              
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
@@ -568,13 +921,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.1),
+                              color: accentColor.withOpacity(0.1),
                               shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: accentColor.withOpacity(0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Icon(
                                 Icons.coffee,
-                                color: AppTheme.primaryColor,
+                                color: accentColor,
                               ),
                             ),
                           ),
@@ -585,12 +945,42 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   drink.name,
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                Text(
-                                  '${drink.caffeineAmount} mg Koffein',
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      margin: const EdgeInsets.only(top: 4),
+                                      decoration: BoxDecoration(
+                                        color: accentColor.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '${drink.caffeineAmount.toInt()} mg',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: accentColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    if (drink.note != null) ...[
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          drink.note!,
+                                          style: Theme.of(context).textTheme.bodySmall,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ],
                             ),
@@ -598,9 +988,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                coffeeProvider.formatTime(drink.timestamp),
-                                style: Theme.of(context).textTheme.bodySmall,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  coffeeProvider.formatTime(drink.timestamp),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
                               ),
                             ],
                           ),

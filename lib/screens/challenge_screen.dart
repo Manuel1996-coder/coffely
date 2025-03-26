@@ -14,6 +14,13 @@ class ChallengeScreen extends StatefulWidget {
 class _ChallengeScreenState extends State<ChallengeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  
+  // Kaffeefarben - weichere, pastellige Töne
+  static const Color accentColor = Color(0xFF8D6E63); // Sanftes Braun als Hauptfarbe
+  static const Color lightAccentColor = Color(0xFFBCAAA4); // Helles Braun
+  static const Color darkAccentColor = Color(0xFF5D4037); // Dunkles Braun
+  static const Color warningColor = Color(0xFFE6A278); // Warmes Orange als Warnfarbe
+  static const Color successColor = Color(0xFF81C784); // Sanftes Grün für Erfolg
 
   @override
   void initState() {
@@ -38,16 +45,43 @@ class _ChallengeScreenState extends State<ChallengeScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Herausforderungen',
-                    style: Theme.of(context).textTheme.headlineLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Verbessere deinen Kaffeekonsum und sammle Auszeichnungen',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppTheme.secondaryTextColor,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: Icon(
+                          Icons.emoji_events_rounded,
+                          color: accentColor,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Herausforderungen',
+                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: darkAccentColor,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Verbessere deinen Kaffeekonsum und sammle Auszeichnungen',
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: AppTheme.secondaryTextColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   _buildTabBar(),
@@ -73,17 +107,17 @@ class _ChallengeScreenState extends State<ChallengeScreen>
     return Container(
       height: 50,
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.1),
+        color: accentColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(25),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
           borderRadius: BorderRadius.circular(25),
-          color: AppTheme.primaryColor,
+          color: accentColor,
         ),
         labelColor: Colors.white,
-        unselectedLabelColor: AppTheme.primaryColor,
+        unselectedLabelColor: accentColor,
         labelStyle: Theme.of(context).textTheme.labelLarge,
         unselectedLabelStyle: Theme.of(context).textTheme.labelLarge,
         indicatorSize: TabBarIndicatorSize.tab,
@@ -134,14 +168,20 @@ class _ChallengeScreenState extends State<ChallengeScreen>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primaryColor.withOpacity(0.9),
-                    AppTheme.secondaryColor.withOpacity(0.9),
+                    accentColor.withOpacity(0.9),
+                    darkAccentColor.withOpacity(0.9),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: AppTheme.cardShadow,
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: Material(
                 color: Colors.transparent,
@@ -176,21 +216,16 @@ class _ChallengeScreenState extends State<ChallengeScreen>
                             children: [
                               Text(
                                 'Mehr Herausforderungen',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                    ),
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               Text(
                                 'Erstelle deine eigene Kaffee-Challenge',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Colors.white.withOpacity(0.8),
-                                    ),
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
                               ),
                             ],
                           ),
@@ -259,9 +294,9 @@ class _ChallengeScreenState extends State<ChallengeScreen>
     Color progressColor;
 
     if (isCompleted) {
-      progressColor = AppTheme.successColor;
+      progressColor = successColor;
     } else if (progressPercent > 0) {
-      progressColor = AppTheme.primaryColor;
+      progressColor = accentColor;
     } else {
       progressColor = Colors.grey[400]!;
     }
@@ -271,7 +306,21 @@ class _ChallengeScreenState extends State<ChallengeScreen>
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            progressColor.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -285,16 +334,16 @@ class _ChallengeScreenState extends State<ChallengeScreen>
                   height: 50,
                   decoration: BoxDecoration(
                     color: isCompleted
-                        ? AppTheme.successColor.withOpacity(0.1)
-                        : AppTheme.primaryColor.withOpacity(0.1),
+                        ? successColor.withOpacity(0.15)
+                        : accentColor.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
                     child: Icon(
                       isCompleted ? Icons.check : icon,
                       color: isCompleted
-                          ? AppTheme.successColor
-                          : AppTheme.primaryColor,
+                          ? successColor
+                          : accentColor,
                       size: 28,
                     ),
                   ),
@@ -306,32 +355,36 @@ class _ChallengeScreenState extends State<ChallengeScreen>
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: darkAccentColor,
+                        ),
                       ),
                       Text(
                         description,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.secondaryTextColor,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: isCompleted
-                        ? AppTheme.successColor.withOpacity(0.1)
-                        : AppTheme.primaryColor.withOpacity(0.1),
+                        ? successColor.withOpacity(0.15)
+                        : accentColor.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     reward,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isCompleted
-                              ? AppTheme.successColor
-                              : AppTheme.primaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: isCompleted
+                          ? successColor
+                          : accentColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -375,7 +428,23 @@ class _ChallengeScreenState extends State<ChallengeScreen>
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            achievement.isUnlocked
+                ? accentColor.withOpacity(0.05)
+                : Colors.grey[100]!,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -388,16 +457,25 @@ class _ChallengeScreenState extends State<ChallengeScreen>
               height: 80,
               decoration: BoxDecoration(
                 color: achievement.isUnlocked
-                    ? AppTheme.primaryColor.withOpacity(0.1)
+                    ? accentColor.withOpacity(0.15)
                     : Colors.grey[200],
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: achievement.isUnlocked
+                        ? accentColor.withOpacity(0.2)
+                        : Colors.grey[300]!,
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Center(
                 child: Icon(
                   achievement.icon,
                   size: 40,
                   color: achievement.isUnlocked
-                      ? AppTheme.primaryColor
+                      ? accentColor
                       : Colors.grey[400],
                 ),
               ),
@@ -406,10 +484,11 @@ class _ChallengeScreenState extends State<ChallengeScreen>
             Text(
               achievement.title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: achievement.isUnlocked
-                        ? AppTheme.textColor
-                        : Colors.grey[400],
-                  ),
+                color: achievement.isUnlocked
+                    ? darkAccentColor
+                    : Colors.grey[400],
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -418,10 +497,10 @@ class _ChallengeScreenState extends State<ChallengeScreen>
                   ? achievement.description
                   : 'Noch nicht freigeschaltet',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: achievement.isUnlocked
-                        ? AppTheme.secondaryTextColor
-                        : Colors.grey[400],
-                  ),
+                color: achievement.isUnlocked
+                    ? AppTheme.secondaryTextColor
+                    : Colors.grey[400],
+              ),
               textAlign: TextAlign.center,
             ),
           ],

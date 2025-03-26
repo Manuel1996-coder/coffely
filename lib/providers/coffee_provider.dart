@@ -7,12 +7,15 @@ import 'dart:math';
 class CoffeeProvider with ChangeNotifier {
   List<CoffeeDrink> _drinks = [];
   bool _isLoading = false;
+  double _caffeineLimit = 400.0; // Standard-Koffeinlimit
 
   List<CoffeeDrink> get drinks => _drinks;
   bool get isLoading => _isLoading;
+  double get caffeineLimit => _caffeineLimit;
 
   CoffeeProvider() {
     _loadDrinks();
+    _loadCaffeineLimit();
   }
 
   Future<void> _loadDrinks() async {
@@ -41,6 +44,27 @@ class CoffeeProvider with ChangeNotifier {
       await prefs.setStringList('drinks', drinksJson);
     } catch (e) {
       debugPrint('Fehler beim Speichern der Getränke: $e');
+    }
+  }
+
+  Future<void> _loadCaffeineLimit() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _caffeineLimit = prefs.getDouble('caffeine_limit') ?? 400.0;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Fehler beim Laden des Koffeinlimits: $e');
+    }
+  }
+
+  Future<void> setCaffeineLimit(double limit) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('caffeine_limit', limit);
+      _caffeineLimit = limit;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Fehler beim Speichern des Koffeinlimits: $e');
     }
   }
 
