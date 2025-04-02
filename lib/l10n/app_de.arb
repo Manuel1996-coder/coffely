@@ -1,0 +1,131 @@
+{
+  "appTitle": "Coffely",
+  
+  "@@locale": "de",
+  
+  "welcomeTitle": "Willkommen bei Coffely",
+  "welcomeSubtitle": "Verfolge deinen Kaffeekonsum und bleibe innerhalb gesunder Grenzen",
+  "continueButton": "Weiter",
+  
+  "goodMorning": "Guten Morgen",
+  "goodDay": "Guten Tag",
+  "goodEvening": "Guten Abend",
+  "todayIs": "Heute ist {weekday}",
+  "@todayIs": {
+    "placeholders": {
+      "weekday": {
+        "type": "String",
+        "example": "Montag"
+      }
+    }
+  },
+  
+  "timeForCoffee": "Zeit für Kaffee?",
+  
+  "today": "Heute",
+  "drinksToday": "Getränke heute",
+  "caffeineToday": "Koffein heute",
+  "dailyLimit": "{percentage}% des täglichen Limits",
+  "@dailyLimit": {
+    "placeholders": {
+      "percentage": {
+        "type": "String",
+        "example": "75"
+      }
+    }
+  },
+  
+  "lowCaffeineConsumption": "Niedriger Koffeinkonsum",
+  "optimalCaffeineConsumption": "Optimaler Koffeinkonsum",
+  "elevatedCaffeineConsumption": "Erhöhter Koffeinkonsum",
+  "highCaffeineConsumption": "Hoher Koffeinkonsum",
+  
+  "coffeeBreakTip": "Vielleicht eine Pause vom Kaffee einlegen?",
+  "noCaffeineYet": "Noch keinen Kaffee heute? Zeit für eine Tasse!",
+  
+  "quickAdd": "Schnell hinzufügen",
+  "espresso": "Espresso",
+  "cappuccino": "Cappuccino",
+  "latteMacchiato": "Latte Macchiato",
+  "filterCoffee": "Filterkaffee",
+  "instantCoffee": "Instant-Kaffee",
+  "cremaCoffee": "Kaffee Crema",
+  
+  "drinkAdded": "{drinkName} hinzugefügt",
+  "@drinkAdded": {
+    "placeholders": {
+      "drinkName": {
+        "type": "String",
+        "example": "Espresso"
+      }
+    }
+  },
+  
+  "recentlyConsumed": "Kürzlich getrunken",
+  "showAll": "Alle anzeigen",
+  "noCoffeeConsumed": "Kein Kaffee getrunken",
+  "yourCoffeesShownHere": "Deine Kaffees werden hier angezeigt",
+  
+  "addDrink": "Getränk hinzufügen",
+  "addCustomDrink": "Eigenes Getränk hinzufügen",
+  "drinkName": "Name des Getränks",
+  "drinkNameHint": "z.B. Doppelter Espresso",
+  "caffeineContent": "Koffeingehalt: {amount} mg",
+  "@caffeineContent": {
+    "placeholders": {
+      "amount": {
+        "type": "int",
+        "example": "80"
+      }
+    }
+  },
+  "add": "Hinzufügen",
+  
+  "caffeineMg": "{amount} mg",
+  "@caffeineMg": {
+    "placeholders": {
+      "amount": {
+        "type": "int",
+        "example": "400"
+      }
+    }
+  },
+  
+  "aboutCoffely": "Coffely ist deine persönliche Kaffee-Tracking-App, die dir hilft, deinen Kaffeekonsum zu überwachen und zu optimieren.",
+  "aboutDescription": "Mit Coffely kannst du deine tägliche Koffeinaufnahme verfolgen, deinen Konsum visualisieren und ein gesundes Gleichgewicht finden. Die App bietet dir personalisierte Einblicke und hilft dir, deine Kaffeegewohnheiten besser zu verstehen.",
+  "features": "Features:\n• Tracking von Kaffeegetränken und Koffeingehalt\n• Persönliche Statistiken und Trends\n• Visualisierung deines Kaffeekonsums\n• Erinnerungen und Benachrichtigungen\n• Empfehlungen für einen ausgewogenen Koffeinkonsum",
+  "developedWith": "Entwickelt mit ♥ und viel Kaffee in Deutschland",
+  
+  "leoHappy1": "Heute ist ein wunderbarer Tag für guten Kaffee!",
+  "leoHappy2": "Deine Tasse ist perfekt temperiert. Genieße den Moment.",
+  "leoHappy3": "Ein ausgewogener Kaffeegenuss – genau richtig für dich.",
+  
+  "leoSleepy1": "Na, schon die erste Tasse genossen heute?",
+  "leoSleepy2": "Ein sanfter Start in den Tag beginnt mit einem guten Kaffee.",
+  "leoSleepy3": "Wie wäre es mit einem Espresso für einen angenehmen Energieschub?",
+  
+  "leoWarning1": "Vielleicht eine kleine Kaffeepause? Wasser wäre jetzt ideal.",
+  "leoWarning2": "Ein Moment zum Durchatmen – dein Koffeinlevel ist recht hoch.",
+  "leoWarning3": "Wie wäre es mit einem Kräutertee zur Abwechslung?",
+  
+  "leoProud1": "Wunderbar! Du hast deine Challenge gemeistert.",
+  "leoProud2": "Ein schöner Erfolg – deine Kaffeebilanz ist ausgezeichnet.",
+  "leoProud3": "Das hast du ganz hervorragend gemacht. Weiter so!",
+  
+  "leoAddCoffee1": "Zeit für eine neue Tasse? Was darf es sein?",
+  "leoAddCoffee2": "Eine Kaffeespezialität für zwischendurch?",
+  "leoAddCoffee3": "Heute ist ein guter Tag für einen Cappuccino.",
+  
+  "close": "Schließen",
+  "ok": "OK",
+  "version": "Version {version}",
+  "@version": {
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.0.0"
+      }
+    }
+  },
+  "copyright": "© 2025 Wizard Dynamics GmbH"
+} 

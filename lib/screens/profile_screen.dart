@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/coffee_provider.dart';
 import '../models/coffee_drink.dart';
 import '../theme/app_theme.dart';
+import '../providers/user_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 // Kaffeefarben - weichere, pastellige Töne
 const Color accentColor = Color(0xFF8D6E63); // Sanftes Braun als Hauptfarbe
@@ -541,7 +543,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       axisSide: meta.axisSide,
                       child: Text(
                         '${date.day}.${date.month}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppTheme.secondaryTextColor,
                           fontSize: 12,
                         ),
@@ -559,7 +561,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       axisSide: meta.axisSide,
                       child: Text(
                         value.toInt().toString(),
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppTheme.secondaryTextColor,
                           fontSize: 12,
                         ),
@@ -763,7 +765,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           LinearProgressIndicator(
             value: progress,
             backgroundColor: Colors.grey[200],
-            valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+            valueColor: const AlwaysStoppedAnimation<Color>(accentColor),
             minHeight: 8,
             borderRadius: BorderRadius.circular(4),
           ),
@@ -873,7 +875,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             color: accentColor.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Center(
+          child: const Center(
             child: Icon(
               Icons.coffee,
               color: accentColor,
@@ -984,8 +986,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           onTap: () {
             // Diese Funktion würde normalerweise zum App Store / Play Store führen
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Öffne Store zum Bewerten'),
+              const SnackBar(
+                content: Text('Öffne Store zum Bewerten'),
                 backgroundColor: accentColor,
               ),
             );
@@ -1071,7 +1073,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ),
                 trailing ??
-                    Icon(
+                    const Icon(
                       Icons.arrow_forward_ios,
                       color: AppTheme.secondaryTextColor,
                       size: 16,
@@ -1379,8 +1381,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                     onPressed: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text(
+                        const SnackBar(
+                          content: Text(
                               'Benachrichtigungseinstellungen gespeichert'),
                           backgroundColor: accentColor,
                         ),
@@ -1433,8 +1435,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 onPressed: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text(
+                    const SnackBar(
+                      content: Text(
                           'Datenschutzeinstellungen gespeichert'),
                       backgroundColor: accentColor,
                     ),
@@ -1532,8 +1534,16 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   void _showCaffeineLimitDialog() {
-    final provider = Provider.of<CoffeeProvider>(context, listen: false);
-    double caffeineLimit = provider.caffeineLimit;
+    final coffeeProvider = Provider.of<CoffeeProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    // Verwende das aktuelle Limit aus dem Provider
+    double caffeineLimit = coffeeProvider.caffeineLimit;
+    
+    // Prüfe, ob das Limit individuell berechnet wurde
+    final userProfile = userProvider.userProfile;
+    final bool isCustomCalculatedLimit = userProfile != null && 
+                                        userProfile.weight != null && 
+                                        userProfile.caffeineLimit == userProfile.weight! * 3;
 
     showDialog(
       context: context,
@@ -1567,12 +1577,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                   activeColor: accentColor,
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Empfohlen: 400 mg pro Tag',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.secondaryTextColor,
-                      ),
-                ),
+                isCustomCalculatedLimit
+                  ? Text(
+                      'Basierend auf deinem Gewicht (${userProfile!.weight!.toStringAsFixed(0)} kg)',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.secondaryTextColor,
+                          ),
+                    )
+                  : Text(
+                      'Empfohlen: 400 mg pro Tag',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.secondaryTextColor,
+                          ),
+                    ),
               ],
             ),
             actions: [
@@ -1582,7 +1599,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               FilledButton(
                 onPressed: () {
-                  provider.setCaffeineLimit(caffeineLimit);
+                  // Aktualisiere beide Provider
+                  coffeeProvider.setCaffeineLimit(caffeineLimit);
+                  if (userProfile != null) {
+                    userProvider.updateCaffeineLimit(caffeineLimit);
+                  }
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -1606,89 +1627,52 @@ class _ProfileScreenState extends State<ProfileScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              Icons.coffee,
-              color: accentColor,
-              size: 36,
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Coffely',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: darkAccentColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                Text(
-                  'Version 1.0.0',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.secondaryTextColor,
-                      ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        title: Text('Coffely'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Coffely ist deine persönliche Kaffee-Tracking-App, die dir hilft, '
-                'deinen Kaffeekonsum zu überwachen und zu optimieren.',
+                AppLocalizations.of(context)!.aboutCoffely,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.secondaryTextColor,
                     ),
               ),
               const SizedBox(height: 12),
               Text(
-                'Mit Coffely kannst du deine tägliche Koffeinaufnahme verfolgen, '
-                'deinen Konsum visualisieren und ein gesundes Gleichgewicht finden. '
-                'Die App bietet dir personalisierte Einblicke und hilft dir, deine Kaffeegewohnheiten besser zu verstehen.',
+                AppLocalizations.of(context)!.aboutDescription,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.secondaryTextColor,
                     ),
               ),
               const SizedBox(height: 12),
               Text(
-                'Features:\n'
-                '• Tracking von Kaffeegetränken und Koffeingehalt\n'
-                '• Persönliche Statistiken und Trends\n'
-                '• Visualisierung deines Kaffeekonsums\n'
-                '• Erinnerungen und Benachrichtigungen\n'
-                '• Empfehlungen für einen ausgewogenen Koffeinkonsum',
+                AppLocalizations.of(context)!.features,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.secondaryTextColor,
                     ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Entwickelt mit ♥ und viel Kaffee in Deutschland',
+                AppLocalizations.of(context)!.developedWith,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.secondaryTextColor,
                     ),
               ),
               const SizedBox(height: 12),
-              Text(
-                '©2024 Coffely Team',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.secondaryTextColor,
-                    ),
+              Container(
+                width: double.infinity,
+                alignment: Alignment.center,
+                child: const Text('© 2025 Wizard Dynamics GmbH'),
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Schließen'),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
         ],
       ),

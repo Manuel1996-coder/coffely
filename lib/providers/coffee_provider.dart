@@ -50,6 +50,7 @@ class CoffeeProvider with ChangeNotifier {
   Future<void> _loadCaffeineLimit() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      // Lade das vom Onboarding berechnete Koffeinlimit, falls vorhanden
       _caffeineLimit = prefs.getDouble('caffeine_limit') ?? 400.0;
       notifyListeners();
     } catch (e) {

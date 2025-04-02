@@ -155,8 +155,8 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
     // Berechne das aktuelle Koffein im Körper
     final currentCaffeine = coffeeProvider.predictCaffeineLevel(DateTime.now());
 
-    // Maximales Koffein (etwa 400mg wird allgemein als Tageslimit angesehen)
-    const maxCaffeine = 400.0;
+    // Maximales Koffein aus dem Provider (individuell für den Nutzer)
+    final maxCaffeine = coffeeProvider.caffeineLimit;
 
     // Prozentwert (zwischen 0 und 1)
     final caffeinePercent = (currentCaffeine / maxCaffeine).clamp(0.0, 1.0);
@@ -354,7 +354,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.info_outline,
                           color: darkAccentColor,
                           size: 14,
@@ -438,7 +438,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
         x: 6 - i,
         barRods: [
           BarChartRodData(
-            toY: totalCaffeine,
+            toY: totalCaffeine > 0 ? totalCaffeine : 5, // Minimumlevel für leere Tage
             color: color,
             gradient: LinearGradient(
               colors: [
@@ -471,13 +471,12 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
       child: LayoutBuilder(
         builder: (context, constraints) {
           // Anpassung an die Bildschirmgröße
-          final chartHeight = constraints.maxWidth < 360 ? 180.0 : 200.0;
+          final chartHeight = constraints.maxWidth < 360 ? 170.0 : 190.0;
           final isSmallScreen = constraints.maxWidth < 360;
 
-    return Container(
+          return Container(
             // Höhe reduziert um Overflow zu verhindern
-            height: chartHeight + 40, 
-            padding: const EdgeInsets.fromLTRB(12, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
             decoration: BoxDecoration(
               color: AppTheme.cardColor,
               borderRadius: BorderRadius.circular(24),
@@ -490,6 +489,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
               ],
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min, // Wichtig für korrektes Layoutverhalten
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -526,7 +526,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                 SizedBox(
                   height: chartHeight,
                   child: Padding(
-                    padding: const EdgeInsets.only(bottom: 8), // Extra Padding unten
+                    padding: const EdgeInsets.only(bottom: 4), // Reduziert für weniger Platz
                     child: BarChart(
                       BarChartData(
                         alignment: BarChartAlignment.spaceBetween,
@@ -595,7 +595,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                   ),
                                 );
                               },
-                              reservedSize: 26, // Reduziert für weniger Platz
+                              reservedSize: 24, // Reduziert für weniger Platz
                             ),
                           ),
                           leftTitles: AxisTitles(
@@ -659,7 +659,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                 ),
                                 children: [
                                   TextSpan(
-                                    text: '${rod.toY.toInt()} mg Koffein',
+                                    text: '${rod.toY.toInt() <= 5 ? '0' : rod.toY.toInt()} mg Koffein',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w500,
@@ -724,7 +724,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
         end: Offset.zero,
       ).animate(CurvedAnimation(
         parent: _animationController,
-        curve: Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+        curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
       )),
       child: Row(
       children: [
@@ -759,7 +759,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                       color: accentColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.coffee_rounded,
                       color: accentColor,
                       size: 22,
@@ -942,12 +942,12 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                   ),
                   const SizedBox(height: 20),
                   ...List.generate(favoriteCount, (index) {
-          final entry = sortedDrinks[index];
-          final rank = index + 1;
+                    final entry = sortedDrinks[index];
+                    final rank = index + 1;
                     final caffeineAmount = drinkCaffeine[entry.key] ?? 0;
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -961,8 +961,9 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                             ),
                           ],
                         ),
-            child: Row(
-              children: [
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center, // Vertikale Zentrierung
+                          children: [
                             Container(
                               width: 45,
                               height: 45,
@@ -977,14 +978,15 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                   style: const TextStyle(fontSize: 16),
                                 ),
                               ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        entry.key,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center, // Vertikale Zentrierung
+                                children: [
+                                  Text(
+                                    entry.key,
                                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: darkAccentColor,
@@ -996,6 +998,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                   Wrap(
                                     spacing: 6,
                                     runSpacing: 6,
+                                    crossAxisAlignment: WrapCrossAlignment.center, // Zentrierung
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.symmetric(
@@ -1030,23 +1033,23 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                      ),
-                    ],
-                  ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
-                ),
+                              ),
                             ),
                             const SizedBox(width: 4),
-                Icon(
-                  Icons.favorite,
+                            Icon(
+                              Icons.favorite,
                               color: _getMedalColor(rank),
-                  size: 20,
-                ),
-              ],
+                              size: 20,
+                            ),
+                          ],
                         ),
-            ),
-          );
-        }),
+                      ),
+                    );
+                  }),
                 ],
               ),
       ),
@@ -1136,7 +1139,9 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
     
     // Berechne, wie viele weitere Tassen Kaffee heute erlaubt wären
     final currentCaffeine = caffeineValues.first;
-    final remainingCaffeine = (coffeeProvider.caffeineLimit - currentCaffeine).clamp(0, double.infinity);
+    final caffeineLimit = coffeeProvider.caffeineLimit;
+    final caffeinePercentage = (currentCaffeine / caffeineLimit).clamp(0.0, 1.0);
+    final remainingCaffeine = (caffeineLimit - currentCaffeine).clamp(0, double.infinity);
     final espressoAmount = 60.0; // Durchschnittlicher Koffeingehalt eines Espresso in mg
     final filterCoffeeAmount = 120.0; // Durchschnittlicher Koffeingehalt eines Filterkaffees in mg
     
@@ -1147,28 +1152,22 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
     Color messageColor;
     IconData messageIcon;
     
-    if (currentCaffeine >= coffeeProvider.caffeineLimit) {
-      // Über dem Limit
-      caffeineMessage = 'Koffeinlimit überschritten. Entspann dich mit Wasser oder Tee.';
-      messageColor = Colors.red[400]!;
-      messageIcon = Icons.warning_rounded;
-    } else if (willBeCaffeineFree && caffeineFreeTime.difference(now).inHours < 4) {
-      // Bald koffeinfrei
-      final formatter = DateFormat('HH:mm', 'de_DE');
-      caffeineMessage = 'Du wirst gegen ${formatter.format(caffeineFreeTime)} koffeinfrei sein';
-      messageColor = successColor;
-      messageIcon = Icons.schedule_rounded;
-    } else if (remainingCoffees > 0) {
-      // Noch Platz für mehr Kaffee
-      caffeineMessage = 'Du kannst heute noch $remainingCoffees Kaffee oder $remainingEspressos Espresso genießen';
-      messageColor = accentColor;
-      messageIcon = Icons.coffee_rounded;
-    } else {
-      // Kein zusätzlicher Kaffee empfohlen
+    if (caffeinePercentage >= 0.8) {
+      // Über oder nahe am Limit
       final formatter = DateFormat('HH:mm', 'de_DE');
       caffeineMessage = 'Limit fast erreicht. Nächster Kaffee besser nach ${formatter.format(now.add(Duration(hours: 4)))} Uhr';
       messageColor = warningColor;
       messageIcon = Icons.access_time_rounded;
+    } else if (caffeinePercentage < 0.4) {
+      // Viel Spielraum
+      caffeineMessage = 'Du hast heute noch viel Spielraum – gönn dir ruhig noch eine Tasse.';
+      messageColor = successColor;
+      messageIcon = Icons.coffee;
+    } else {
+      // Zwischen 40-80%
+      caffeineMessage = 'Du bist gut in Balance – weiter so.';
+      messageColor = accentColor;
+      messageIcon = Icons.check_circle_outline;
     }
 
     return SlideTransition(
@@ -1185,7 +1184,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
           final chartHeight = constraints.maxWidth < 360 ? 170.0 : 190.0;
           final isSmallScreen = constraints.maxWidth < 360;
 
-    return Container(
+          return Container(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
             decoration: BoxDecoration(
               color: AppTheme.cardColor,
@@ -1207,6 +1206,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
               ),
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min, // Wichtig für korrektes Layout
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Wrap(
@@ -1424,9 +1424,9 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: messageColor.withOpacity(0.08),
+                    color: const Color(0xFFF7F4F0), // Leicht abgesetzter, warmer Farbton
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: messageColor.withOpacity(0.2),
@@ -1434,6 +1434,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                     ),
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
@@ -1444,7 +1445,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                         child: Icon(
                           messageIcon,
                           color: messageColor,
-                          size: 14,
+                          size: 16,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1452,7 +1453,7 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                         child: Text(
                           caffeineMessage,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: messageColor,
+                            color: darkAccentColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),

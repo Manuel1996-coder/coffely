@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class CoffeeDrink {
   final String name;
   final double caffeineAmount;
@@ -16,37 +14,37 @@ class CoffeeDrink {
   // Vordefinierte Kaffeegetränke
   static final espresso = CoffeeDrink(
     name: 'Espresso',
-    caffeineAmount: 30,
+    caffeineAmount: 60,
     timestamp: DateTime(2023, 1, 1),
   );
 
   static final cappuccino = CoffeeDrink(
     name: 'Cappuccino',
-    caffeineAmount: 30,
+    caffeineAmount: 60,
     timestamp: DateTime(2023, 1, 1),
   );
 
   static final latteMacchiato = CoffeeDrink(
     name: 'Latte Macchiato',
-    caffeineAmount: 30,
+    caffeineAmount: 60,
     timestamp: DateTime(2023, 1, 1),
   );
 
   static final filterCoffee = CoffeeDrink(
     name: 'Filterkaffee',
-    caffeineAmount: 80,
+    caffeineAmount: 160,
     timestamp: DateTime(2023, 1, 1),
   );
   
   static final instantCoffee = CoffeeDrink(
     name: 'Instant-Kaffee',
-    caffeineAmount: 80,
+    caffeineAmount: 160,
     timestamp: DateTime(2023, 1, 1),
   );
   
   static final cremaCoffee = CoffeeDrink(
     name: 'Kaffee Crema',
-    caffeineAmount: 60,
+    caffeineAmount: 120,
     timestamp: DateTime(2023, 1, 1),
   );
 

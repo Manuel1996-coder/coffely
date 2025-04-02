@@ -2,19 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/coffee_provider.dart';
+import 'providers/user_provider.dart';
 import 'theme/app_theme.dart';
-import 'screens/home_screen.dart';
-import 'screens/stats_screen.dart';
-import 'screens/challenge_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/main_screen.dart';
+import 'screens/onboarding/onboarding_screen.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'l10n/l10n.dart';
+
+// Extension für einfachen Zugriff auf lokalisierte Strings
+extension LocalizationsExtension on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Setze Statusbar-Farbe für ein konsistentes Design
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
+    const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
@@ -32,150 +39,54 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CoffeeProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CoffeeProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
       child: MaterialApp(
         title: 'Coffely',
         theme: AppTheme.theme,
-        home: const MainScreen(),
+        home: const AppStartupRouter(),
         debugShowCheckedModeBanner: false,
+        // Lokalisierungskonfiguration
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: L10n.all,
       ),
     );
   }
 }
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
-
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen>
-    with SingleTickerProviderStateMixin {
-  int _selectedIndex = 0;
-  late PageController _pageController;
-
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const StatsScreen(),
-    const ChallengeScreen(),
-    const ProfileScreen(),
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _onPageChanged(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  void _onNavTapped(int index) {
-    _pageController.animateToPage(
-      index,
-      duration: AppTheme.animationDuration,
-      curve: Curves.easeInOut,
-    );
-  }
+// Router Widget to decide between onboarding and main screen
+class AppStartupRouter extends StatelessWidget {
+  const AppStartupRouter({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        physics:
-            const NeverScrollableScrollPhysics(), // Deaktiviere horizontales Swiping
-        children: _screens,
-      ),
-      bottomNavigationBar: _buildAnimatedNavBar(),
-      extendBody: true, // Erlaubt dem Body unter die Navigation zu gehen
-    );
-  }
-
-  Widget _buildAnimatedNavBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, -3),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
-              _buildNavItem(
-                  1, Icons.insights_outlined, Icons.insights, 'Statistik'),
-              _buildNavItem(2, Icons.emoji_events_outlined, Icons.emoji_events,
-                  'Challenges'),
-              _buildNavItem(3, Icons.person_outline, Icons.person, 'Profil'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-      int index, IconData icon, IconData activeIcon, String label) {
-    final isSelected = _selectedIndex == index;
-
-    return InkWell(
-      onTap: () => _onNavTapped(index),
-      customBorder: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      splashColor: AppTheme.primaryColor.withOpacity(0.1),
-      highlightColor: AppTheme.primaryColor.withOpacity(0.05),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.primaryColor.withOpacity(0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? AppTheme.primaryColor : Colors.grey,
-              size: 24,
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        if (userProvider.isLoading) {
+          // Show loading screen while checking user status
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? AppTheme.primaryColor : Colors.grey,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
+          );
+        }
+        
+        // Check if onboarding is completed
+        if (!userProvider.isOnboardingCompleted) {
+          return const OnboardingScreen();
+        }
+        
+        // Onboarding completed, go to main screen
+        return const MainScreen();
+      },
     );
   }
 }

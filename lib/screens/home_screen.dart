@@ -5,8 +5,22 @@ import '../models/coffee_drink.dart';
 import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import '../widgets/coffee_mascot.dart';
-import '../widgets/mascot_tooltip.dart';
+import '../widgets/leo_mascot.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+// Extension für einfachen Zugriff auf lokalisierte Strings
+extension LocalizationsExtension on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
+
+// Hilfsfunktion für lokalisierte Texte mit Platzhaltern
+String _formatLocalizedText(String text, Map<String, String> replacements) {
+  String result = text;
+  replacements.forEach((key, value) {
+    result = result.replaceAll('{$key}', value);
+  });
+  return result;
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,53 +30,71 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  MascotState _mascotState = MascotState.greeting;
+  LeoState _leoState = LeoState.happy;
   bool _showTooltip = false;
-  String _mascotMessage = '';
+  String _leoMessage = '';
+  bool _challengeCompleted = false; // Beispiel-Flag für Challenge-Abschluss
 
   @override
   void initState() {
     super.initState();
-    // Initialisiere die Lokalisierungsdaten für Deutsch
-    initializeDateFormatting('de_DE', null);
+    // Initialisiere die Lokalisierungsdaten basierend auf der aktuellen Sprache
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    initializeDateFormatting(locale.languageCode, null);
     
-    // Zeige das Mascot mit Nachricht nach einer kurzen Verzögerung
+    // Zeige Leo mit Nachricht nach einer kurzen Verzögerung
     Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
         _showTooltip = true;
-        _mascotMessage =
-            MascotManager.getMessage(MascotState.greeting, context);
+        _leoMessage = LeoManager.getRandomMessage(LeoState.happy);
       });
     });
   }
 
-  void _updateMascotState(CoffeeProvider provider) {
-    final currentCaffeine = provider.predictCaffeineLevel();
-
-    // Kein Kaffee heute = müde
-    if (provider.getTodayDrinks().isEmpty) {
-      _mascotState = MascotState.sleepy;
-    }
-    // Zu viel Kaffee = übermunter
-    else if (currentCaffeine > 300) {
-      _mascotState = MascotState.excited;
-    }
-    // Normaler Kaffeekonsum = glücklich
-    else if (currentCaffeine > 0) {
-      _mascotState = MascotState.happy;
-    }
-    // Standard = Begrüßung
-    else {
-      _mascotState = MascotState.greeting;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Context an LeoManager übergeben
+    LeoManager.setContext(context);
+    
+    // Update Leo's Zustand außerhalb des Build-Prozesses
+    final coffeeProvider = Provider.of<CoffeeProvider>(context);
+    if (!coffeeProvider.isLoading) {
+      final todayDrinks = coffeeProvider.getTodayDrinks().length;
+      final currentCaffeine = coffeeProvider.predictCaffeineLevel();
+      final caffeineLimit = coffeeProvider.caffeineLimit;
+      
+      final newLeoState = LeoManager.getLeoState(
+        todayDrinks,
+        currentCaffeine, 
+        caffeineLimit,
+        _challengeCompleted
+      );
+      
+      if (newLeoState != _leoState) {
+        setState(() {
+          _leoState = newLeoState;
+        });
+      }
     }
   }
 
-  void _handleMascotTap() {
+  void _handleLeoTap() {
     setState(() {
       _showTooltip = !_showTooltip;
       if (_showTooltip) {
-        _mascotMessage = MascotManager.getMessage(_mascotState, context);
+        _leoMessage = LeoManager.getRandomMessage(_leoState);
       }
+    });
+  }
+
+  // Optional: Funktion, um Leo in den Add-Coffee-Modus zu versetzen
+  void _setLeoToAddCoffee() {
+    setState(() {
+      _leoState = LeoState.addCoffee;
+      _showTooltip = true;
+      _leoMessage = LeoManager.getRandomMessage(LeoState.addCoffee);
     });
   }
 
@@ -76,8 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            // Aktualisiere den Mascot-Zustand basierend auf den Daten
-            _updateMascotState(coffeeProvider);
+            // Leo-Zustand wird nicht mehr hier aktualisiert, sondern in didChangeDependencies
+            // _updateLeoState(coffeeProvider);
 
             return Stack(
               children: [
@@ -100,14 +132,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.add_circle,
                               color: AppTheme.primaryColor,
                               size: 24,
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Schnell hinzufügen',
+                              context.l10n.quickAdd,
                               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -128,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
-                // Position für das Mascot
+                // Position für Leo
                 Positioned(
                   bottom: 24,
                   right: 24,
@@ -136,17 +168,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       if (_showTooltip)
-                        MascotTooltip(
-                          message: _mascotMessage,
+                        LeoTooltip(
+                          message: _leoMessage,
                           isVisible: _showTooltip,
                           onDismiss: () => setState(() => _showTooltip = false),
                         ),
                       const SizedBox(height: 8),
-                      CoffeeMascot(
-                        state: _mascotState,
+                      LeoMascot(
+                        state: _leoState,
                         size: 80,
-                        animationPath: MascotManager.getAnimationForState(_mascotState),
-                        onTap: _handleMascotTap,
+                        onTap: _handleLeoTap,
                       ),
                     ],
                   ),
@@ -158,11 +189,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
+          _setLeoToAddCoffee(); // Ändere Leo zum AddCoffee-Modus
           _showAddCustomDrinkModal(context);
         },
         backgroundColor: AppTheme.primaryColor,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Getränk hinzufügen', style: TextStyle(color: Colors.white)),
+        label: Text(context.l10n.addDrink, style: const TextStyle(color: Colors.white)),
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -176,15 +208,15 @@ class _HomeScreenState extends State<HomeScreen> {
     String greeting;
 
     if (now.hour < 12) {
-      greeting = 'Guten Morgen';
+      greeting = context.l10n.goodMorning;
     } else if (now.hour < 18) {
-      greeting = 'Guten Tag';
+      greeting = context.l10n.goodDay;
     } else {
-      greeting = 'Guten Abend';
+      greeting = context.l10n.goodEvening;
     }
     
     // Ermittle den Wochentag
-    final dayOfWeek = DateFormat('EEEE', 'de_DE').format(now);
+    final dayOfWeek = DateFormat('EEEE', Localizations.localeOf(context).languageCode).format(now);
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -221,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.wb_sunny,
                         color: AppTheme.primaryColor,
                         size: 24,
@@ -239,7 +271,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         Text(
-                          'Heute ist $dayOfWeek',
+                          "Heute ist $dayOfWeek",
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.secondaryTextColor,
                           ),
@@ -265,14 +297,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.coffee,
                         color: AppTheme.primaryColor,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Zeit für Kaffee?',
+                        context.l10n.timeForCoffee,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppTheme.primaryColor,
                           fontWeight: FontWeight.bold,
@@ -327,8 +359,8 @@ class _HomeScreenState extends State<HomeScreen> {
       (sum, drink) => sum + drink.caffeineAmount,
     );
 
-    // Max Koffein für einen durchschnittlichen Erwachsenen
-    const maxCaffeine = 400.0;
+    // Individuelles Koffein-Limit aus dem CoffeeProvider
+    final maxCaffeine = coffeeProvider.caffeineLimit;
     final percentage = (totalCaffeine / maxCaffeine).clamp(0.0, 1.0);
     
     // Status Text basierend auf Koffeinkonsum
@@ -337,19 +369,19 @@ class _HomeScreenState extends State<HomeScreen> {
     IconData statusIcon;
     
     if (percentage < 0.25) {
-      statusText = 'Niedriger Koffeinkonsum';
+      statusText = context.l10n.lowCaffeineConsumption;
       statusColor = Colors.green[600]!;
       statusIcon = Icons.sentiment_satisfied_alt;
     } else if (percentage < 0.5) {
-      statusText = 'Optimaler Koffeinkonsum';
+      statusText = context.l10n.optimalCaffeineConsumption;
       statusColor = Colors.blue[600]!;
       statusIcon = Icons.sentiment_very_satisfied;
     } else if (percentage < 0.75) {
-      statusText = 'Erhöhter Koffeinkonsum';
+      statusText = context.l10n.elevatedCaffeineConsumption;
       statusColor = Colors.orange[600]!;
       statusIcon = Icons.sentiment_neutral;
     } else {
-      statusText = 'Hoher Koffeinkonsum';
+      statusText = context.l10n.highCaffeineConsumption;
       statusColor = Colors.red[600]!;
       statusIcon = percentage >= 1.0 ? Icons.sentiment_very_dissatisfied : Icons.sentiment_dissatisfied;
     }
@@ -377,7 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Heute',
+                  context.l10n.today,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: AppTheme.primaryColor,
                     fontWeight: FontWeight.bold,
@@ -423,7 +455,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _buildEnhancedStatItem(
                         context,
                         '${todayDrinks.length}',
-                        'Getränke heute',
+                        context.l10n.drinksToday,
                         Icons.coffee,
                         AppTheme.primaryColor,
                       ),
@@ -433,7 +465,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _buildEnhancedStatItem(
                         context,
                         '${totalCaffeine.toStringAsFixed(0)} mg',
-                        'Koffein heute',
+                        context.l10n.caffeineToday,
                         Icons.bolt_outlined,
                         statusColor,
                       ),
@@ -470,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              '${(percentage * 100).toStringAsFixed(0)}% des täglichen Limits',
+                              "${(percentage * 100).toStringAsFixed(0)}% des täglichen Limits",
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -500,7 +532,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            '400 mg',
+                            '${maxCaffeine.toInt()} mg',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: percentage > 0.7 ? Colors.white : Colors.black54,
                               fontSize: 10,
@@ -536,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Vielleicht eine Pause vom Kaffee einlegen?',
+                              context.l10n.coffeeBreakTip,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Colors.red[700],
                               ),
@@ -547,6 +579,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 
+                // Nachricht anzeigen, wenn noch kein Kaffee getrunken wurde
                 if (todayDrinks.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 16),
@@ -563,14 +596,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.info_outline,
+                            Icons.coffee_outlined,
                             color: Colors.blue[400],
                             size: 18,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Noch keinen Kaffee heute? Zeit für eine Tasse!',
+                              context.l10n.noCaffeineYet,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Colors.blue[700],
                               ),
@@ -810,7 +843,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Kürzlich getrunken',
+              context.l10n.recentlyConsumed,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -829,57 +862,60 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     // Später: Alle Getränke anzeigen
                   },
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.history, 
                     size: 16,
                     color: AppTheme.primaryColor,
                   ),
                   label: Text(
-                    'Alle anzeigen',
-                    style: TextStyle(
+                    context.l10n.showAll,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
+                    padding: EdgeInsets.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        
         if (recentDrinks.isEmpty)
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: AppTheme.cardShadow,
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Center(
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.coffee_outlined,
                     size: 48,
-                    color: AppTheme.secondaryTextColor.withOpacity(0.5),
+                    color: Colors.grey[400],
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Kein Kaffee getrunken',
+                    context.l10n.noCoffeeConsumed,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.secondaryTextColor,
-                        ),
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Deine Kaffees werden hier angezeigt',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.tertiaryTextColor,
-                        ),
+                    context.l10n.yourCoffeesShownHere,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -888,57 +924,56 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         else
           Column(
-            children: recentDrinks.take(3).map((drink) {
-              // Bestimme Farbe basierend auf Koffeinmenge
+            children: recentDrinks.map((drink) {
               Color accentColor;
               if (drink.caffeineAmount <= 30) {
-                accentColor = Colors.green[600]!;
+                accentColor = Colors.green;
               } else if (drink.caffeineAmount <= 60) {
-                accentColor = Colors.blue[600]!;
+                accentColor = Colors.blue;
               } else {
-                accentColor = Colors.orange[600]!;
+                accentColor = Colors.orange;
               }
               
               return Container(
-                margin: const EdgeInsets.only(bottom: 12),
+                margin: const EdgeInsets.only(top: 12),
                 decoration: BoxDecoration(
-                  color: AppTheme.cardColor,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: AppTheme.cardShadow,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      // Später: Details anzeigen oder Aktionen ermöglichen
+                      // Details anzeigen
                     },
                     borderRadius: BorderRadius.circular(16),
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       child: Row(
                         children: [
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
                               color: accentColor.withOpacity(0.1),
                               shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: accentColor.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                             ),
                             child: Center(
                               child: Icon(
                                 Icons.coffee,
                                 color: accentColor,
+                                size: 30,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -969,17 +1004,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                     ),
-                                    if (drink.note != null) ...[
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          drink.note!,
-                                          style: Theme.of(context).textTheme.bodySmall,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
                                   ],
                                 ),
                               ],
@@ -1078,7 +1102,7 @@ class _CustomDrinkBottomSheetState extends State<_CustomDrinkBottomSheet> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Eigenes Getränk hinzufügen',
+            context.l10n.addCustomDrink,
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 20),
@@ -1088,21 +1112,21 @@ class _CustomDrinkBottomSheetState extends State<_CustomDrinkBottomSheet> {
                 name = value;
               });
             },
-            decoration: const InputDecoration(
-              labelText: 'Name des Getränks',
-              hintText: 'z.B. Doppelter Espresso',
+            decoration: InputDecoration(
+              labelText: context.l10n.drinkName,
+              hintText: context.l10n.drinkNameHint,
             ),
           ),
           const SizedBox(height: 20),
           Text(
-            'Koffeingehalt: ${caffeineAmount.toInt()} mg',
+            "Koffeingehalt: ${caffeineAmount.toInt()} mg",
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 10),
           Slider(
             value: caffeineAmount,
-            min: 10,
-            max: 200,
+            min: 20,
+            max: 400,
             divisions: 19,
             label: '${caffeineAmount.toInt()} mg',
             onChanged: (value) {
@@ -1128,7 +1152,7 @@ class _CustomDrinkBottomSheetState extends State<_CustomDrinkBottomSheet> {
                       provider.addDrink(newDrink);
                       Navigator.pop(context);
                     },
-              child: const Text('Hinzufügen'),
+              child: Text(context.l10n.add),
             ),
           ),
         ],

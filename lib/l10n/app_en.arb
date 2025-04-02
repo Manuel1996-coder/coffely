@@ -1,0 +1,131 @@
+{
+  "appTitle": "Coffely",
+  
+  "@@locale": "en",
+  
+  "welcomeTitle": "Welcome to Coffely",
+  "welcomeSubtitle": "Track your coffee consumption and stay within healthy limits",
+  "continueButton": "Continue",
+  
+  "goodMorning": "Good Morning",
+  "goodDay": "Good Day",
+  "goodEvening": "Good Evening",
+  "todayIs": "Today is {weekday}",
+  "@todayIs": {
+    "placeholders": {
+      "weekday": {
+        "type": "String",
+        "example": "Monday"
+      }
+    }
+  },
+  
+  "timeForCoffee": "Time for coffee?",
+  
+  "today": "Today",
+  "drinksToday": "Drinks today",
+  "caffeineToday": "Caffeine today",
+  "dailyLimit": "{percentage}% of daily limit",
+  "@dailyLimit": {
+    "placeholders": {
+      "percentage": {
+        "type": "String",
+        "example": "75"
+      }
+    }
+  },
+  
+  "lowCaffeineConsumption": "Low caffeine consumption",
+  "optimalCaffeineConsumption": "Optimal caffeine consumption",
+  "elevatedCaffeineConsumption": "Elevated caffeine consumption",
+  "highCaffeineConsumption": "High caffeine consumption",
+  
+  "coffeeBreakTip": "Maybe take a break from coffee?",
+  "noCaffeineYet": "No coffee yet today? Time for a cup!",
+  
+  "quickAdd": "Quick add",
+  "espresso": "Espresso",
+  "cappuccino": "Cappuccino",
+  "latteMacchiato": "Latte Macchiato",
+  "filterCoffee": "Filter Coffee",
+  "instantCoffee": "Instant Coffee",
+  "cremaCoffee": "Crema Coffee",
+  
+  "drinkAdded": "{drinkName} added",
+  "@drinkAdded": {
+    "placeholders": {
+      "drinkName": {
+        "type": "String",
+        "example": "Espresso"
+      }
+    }
+  },
+  
+  "recentlyConsumed": "Recently consumed",
+  "showAll": "Show all",
+  "noCoffeeConsumed": "No coffee consumed",
+  "yourCoffeesShownHere": "Your coffees will be shown here",
+  
+  "addDrink": "Add drink",
+  "addCustomDrink": "Add custom drink",
+  "drinkName": "Drink name",
+  "drinkNameHint": "e.g. Double Espresso",
+  "caffeineContent": "Caffeine content: {amount} mg",
+  "@caffeineContent": {
+    "placeholders": {
+      "amount": {
+        "type": "int",
+        "example": "80"
+      }
+    }
+  },
+  "add": "Add",
+  
+  "caffeineMg": "{amount} mg",
+  "@caffeineMg": {
+    "placeholders": {
+      "amount": {
+        "type": "int",
+        "example": "400"
+      }
+    }
+  },
+  
+  "aboutCoffely": "Coffely is your personal coffee tracking app that helps you monitor and optimize your coffee consumption.",
+  "aboutDescription": "With Coffely, you can track your daily caffeine intake, visualize your consumption, and find a healthy balance. The app provides you with personalized insights and helps you better understand your coffee habits.",
+  "features": "Features:\n• Tracking of coffee drinks and caffeine content\n• Personal statistics and trends\n• Visualization of your coffee consumption\n• Reminders and notifications\n• Recommendations for a balanced caffeine intake",
+  "developedWith": "Developed with ♥ and lots of coffee in Germany",
+  
+  "leoHappy1": "Today is a wonderful day for good coffee!",
+  "leoHappy2": "Your cup is perfectly tempered. Enjoy the moment.",
+  "leoHappy3": "A balanced coffee enjoyment - just right for you.",
+  
+  "leoSleepy1": "Have you enjoyed your first cup today?",
+  "leoSleepy2": "A gentle start to the day begins with a good coffee.",
+  "leoSleepy3": "How about an espresso for a pleasant energy boost?",
+  
+  "leoWarning1": "Perhaps a little coffee break? Water would be ideal now.",
+  "leoWarning2": "A moment to breathe - your caffeine level is quite high.",
+  "leoWarning3": "How about a herbal tea for a change?",
+  
+  "leoProud1": "Wonderful! You have mastered your challenge.",
+  "leoProud2": "A nice success - your coffee balance is excellent.",
+  "leoProud3": "You did very well. Keep it up!",
+  
+  "leoAddCoffee1": "Time for a new cup? What would you like?",
+  "leoAddCoffee2": "A coffee specialty for in between?",
+  "leoAddCoffee3": "Today is a good day for a cappuccino.",
+  
+  "close": "Close",
+  "ok": "OK",
+  "version": "Version {version}",
+  "@version": {
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.0.0"
+      }
+    }
+  },
+  "copyright": "© 2025 Wizard Dynamics GmbH"
+} 
