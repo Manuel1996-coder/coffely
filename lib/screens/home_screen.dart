@@ -170,13 +170,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (_showTooltip)
                         LeoTooltip(
                           message: _leoMessage,
-                          isVisible: _showTooltip,
+                            isVisible: _showTooltip,
                           onDismiss: () => setState(() => _showTooltip = false),
                         ),
                       const SizedBox(height: 8),
                       LeoMascot(
                         state: _leoState,
-                        size: 80,
+                          size: 80,
                         onTap: _handleLeoTap,
                       ),
                     ],
@@ -232,8 +232,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,30 +260,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          greeting,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              greeting,
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppTheme.primaryColor,
-                          ),
+            ),
                         ),
-                        Text(
+            Text(
                           "Heute ist $dayOfWeek",
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.secondaryTextColor,
-                          ),
-                        ),
-                      ],
-                    ),
+                    color: AppTheme.secondaryTextColor,
+                  ),
+            ),
+          ],
+        ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Container(
+        Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
+          decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
@@ -319,7 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              shape: BoxShape.circle,
+            shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -327,26 +327,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   offset: const Offset(0, 4),
                 ),
               ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  // Hier später zum Profil navigieren
-                },
-                customBorder: const CircleBorder(),
-                child: const Padding(
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                // Hier später zum Profil navigieren
+              },
+              customBorder: const CircleBorder(),
+              child: const Padding(
                   padding: EdgeInsets.all(12.0),
-                  child: Icon(
-                    Icons.person_outline,
+                child: Icon(
+                  Icons.person_outline,
                     size: 30,
-                    color: AppTheme.primaryColor,
-                  ),
+                  color: AppTheme.primaryColor,
                 ),
               ),
             ),
           ),
-        ],
+        ),
+      ],
       ),
     );
   }
@@ -392,9 +392,9 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppTheme.cardShadow,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // Header der Karte
           Container(
             padding: const EdgeInsets.all(20),
@@ -432,11 +432,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   child: Text(
-                    DateFormat('dd.MM.yyyy').format(DateTime.now()),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  DateFormat('dd.MM.yyyy').format(DateTime.now()),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: AppTheme.primaryColor,
                     ),
-                  ),
+                      ),
                 ),
               ],
             ),
@@ -450,28 +450,28 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // Statistik-Boxen
                 Row(
-                  children: [
+              children: [
                     Expanded(
                       child: _buildEnhancedStatItem(
-                        context,
-                        '${todayDrinks.length}',
+                  context,
+                  '${todayDrinks.length}',
                         context.l10n.drinksToday,
-                        Icons.coffee,
+                  Icons.coffee,
                         AppTheme.primaryColor,
-                      ),
+                ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildEnhancedStatItem(
-                        context,
-                        '${totalCaffeine.toStringAsFixed(0)} mg',
+                  context,
+                  '${totalCaffeine.toStringAsFixed(0)} mg',
                         context.l10n.caffeineToday,
-                        Icons.bolt_outlined,
+                  Icons.bolt_outlined,
                         statusColor,
                       ),
-                    ),
-                  ],
                 ),
+              ],
+            ),
                 
                 const SizedBox(height: 24),
                 
@@ -517,12 +517,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Fortschrittsbalken
                 Stack(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: percentage,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: percentage,
                         minHeight: 16,
-                        backgroundColor: Colors.grey[200],
+                backgroundColor: Colors.grey[200],
                         valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                       ),
                     ),
@@ -559,7 +559,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       child: Row(
-                        children: [
+              children: [
                           Icon(
                             Icons.info_outline,
                             color: Colors.red[400],
@@ -608,9 +608,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.blue[700],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+            ),
+          ],
+        ),
                     ),
                   ),
               ],
@@ -650,7 +650,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             child: Icon(
-              icon,
+            icon,
               size: 20,
               color: color,
             ),
@@ -658,22 +658,22 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                Text(
-                  label,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              Text(
+                label,
                   style: Theme.of(context).textTheme.bodySmall,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                ),
-              ],
+              ),
+            ],
             ),
           ),
         ],
@@ -808,12 +808,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${option.drink.caffeineAmount.toInt()} mg',
+                  '${option.drink.caffeineAmount.toInt()} mg',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.bold,
                     ),
-                    textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
                   ),
                 ),
               ],
@@ -859,9 +859,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextButton.icon(
-                  onPressed: () {
-                    // Später: Alle Getränke anzeigen
-                  },
+                onPressed: () {
+                  // Später: Alle Getränke anzeigen
+                },
                   icon: const Icon(
                     Icons.history, 
                     size: 16,
@@ -890,10 +890,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
+            decoration: BoxDecoration(
                 color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(16),
-              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -908,14 +908,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: Colors.grey[700],
                       fontWeight: FontWeight.bold,
-                    ),
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     context.l10n.yourCoffeesShownHere,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
-                    ),
+                        ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -1022,7 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  coffeeProvider.formatTime(drink.timestamp),
+                                coffeeProvider.formatTime(drink.timestamp),
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Colors.grey[700],
                                   ),

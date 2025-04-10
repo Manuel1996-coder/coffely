@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/coffee_provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/stamp_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/main_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => CoffeeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => StampProvider()),
       ],
       child: MaterialApp(
         title: 'Coffely',
@@ -57,8 +59,27 @@ class MyApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: L10n.all,
+        // Füge einen Observer hinzu, um die Navigation zu überwachen
+        navigatorObservers: [
+          NavigationObserver(),
+        ],
       ),
     );
+  }
+}
+
+// Observer für die Navigation, der bei Routing-Fehlern helfen kann
+class NavigationObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    // Hier kann man später Logging hinzufügen, um Navigation zu debuggen
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+    // Hier kann man später Logging hinzufügen, um Navigation zu debuggen
   }
 }
 

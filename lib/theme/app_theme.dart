@@ -37,11 +37,11 @@ class AppTheme {
   static const Duration animationDuration = Duration(milliseconds: 300);
 
   // Übergangsanimation
-  static final pageTransition = PageTransitionsTheme(
+  static final pageTransition = const PageTransitionsTheme(
     builders: {
-      TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+      TargetPlatform.android: const CupertinoPageTransitionsBuilder(),
+      TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
+      TargetPlatform.macOS: const CupertinoPageTransitionsBuilder(),
     },
   );
 
@@ -54,8 +54,6 @@ class AppTheme {
         secondary: secondaryColor,
         tertiary: accentColor,
         surface: cardColor,
-        background: backgroundColor,
-        onBackground: textColor,
         onSurface: textColor,
         error: Colors.red[400]!,
       ),
@@ -134,7 +132,7 @@ class AppTheme {
           ),
         ).copyWith(
           overlayColor:
-              MaterialStateProperty.all(Colors.white.withOpacity(0.2)),
+              WidgetStateProperty.all(Colors.white.withOpacity(0.2)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -151,7 +149,7 @@ class AppTheme {
           ),
         ).copyWith(
           overlayColor:
-              MaterialStateProperty.all(primaryColor.withOpacity(0.1)),
+              WidgetStateProperty.all(primaryColor.withOpacity(0.1)),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -167,7 +165,7 @@ class AppTheme {
           ),
         ).copyWith(
           overlayColor:
-              MaterialStateProperty.all(primaryColor.withOpacity(0.1)),
+              WidgetStateProperty.all(primaryColor.withOpacity(0.1)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -225,15 +223,15 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         height: 65,
-        labelTextStyle: MaterialStateProperty.all(
+        labelTextStyle: WidgetStateProperty.all(
           GoogleFonts.lato(
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: textColor,
           ),
         ),
-        iconTheme: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: primaryColor, size: 24);
           }
           return IconThemeData(color: textColor.withOpacity(0.5), size: 24);

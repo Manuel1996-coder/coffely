@@ -474,11 +474,11 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
           final chartHeight = constraints.maxWidth < 360 ? 170.0 : 190.0;
           final isSmallScreen = constraints.maxWidth < 360;
 
-          return Container(
+    return Container(
             // Höhe reduziert um Overflow zu verhindern
             padding: const EdgeInsets.fromLTRB(8, 16, 16, 8),
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -527,31 +527,31 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                   height: chartHeight,
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 4), // Reduziert für weniger Platz
-                    child: BarChart(
-                      BarChartData(
+      child: BarChart(
+        BarChartData(
                         alignment: BarChartAlignment.spaceBetween,
                         maxY: maxCaffeineValue,
-                        titlesData: FlTitlesData(
-                          show: true,
-                          topTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          rightTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
-                                // Berechne den Index des Wochentags
-                                int dayIndex = (today.weekday - (6 - value.toInt()) - 1) % 7;
-                                if (dayIndex < 0) dayIndex += 7;
+          titlesData: FlTitlesData(
+            show: true,
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  // Berechne den Index des Wochentags
+                  int dayIndex = (today.weekday - (6 - value.toInt()) - 1) % 7;
+                  if (dayIndex < 0) dayIndex += 7;
 
                                 final date = today.subtract(Duration(days: 6 - value.toInt()));
                                 final isToday = date.day == today.day;
 
-                                return SideTitleWidget(
-                                  axisSide: meta.axisSide,
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -577,31 +577,31 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                             horizontal: isToday ? 4 : 0, 
                                             vertical: isToday ? 2 : 0
                                           ),
-                                          child: Text(
-                                            weekDays[dayIndex],
-                                            style: TextStyle(
+                    child: Text(
+                      weekDays[dayIndex],
+                      style: TextStyle(
                                               color: isToday
                                                   ? darkAccentColor
-                                                  : AppTheme.secondaryTextColor,
+                            : AppTheme.secondaryTextColor,
                                               fontWeight: isToday
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                                               fontSize: isSmallScreen ? 9 : 10,
-                                            ),
+                      ),
                                           ),
                                         ),
                                       ),
                                     ],
-                                  ),
-                                );
-                              },
+                    ),
+                  );
+                },
                               reservedSize: 24, // Reduziert für weniger Platz
-                            ),
-                          ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
                                 // Formatiere Zahlen für bessere Platzausnutzung
                                 String label;
                                 if (value >= 1000) {
@@ -609,69 +609,69 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                 } else {
                                   label = value.toInt().toString();
                                 }
-                                return SideTitleWidget(
-                                  axisSide: meta.axisSide,
-                                  child: Text(
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text(
                                     label,
-                                    style: TextStyle(
-                                      color: AppTheme.secondaryTextColor,
+                      style: TextStyle(
+                        color: AppTheme.secondaryTextColor,
                                       fontSize: isSmallScreen ? 8 : 9,
-                                    ),
-                                  ),
-                                );
-                              },
+                      ),
+                    ),
+                  );
+                },
                               interval: maxCaffeineValue > 500 ? 200 : 100,
                               reservedSize: 40, // Mehr Platz für Y-Achsenbeschriftungen
-                            ),
-                          ),
-                        ),
-                        gridData: FlGridData(
-                          show: true,
-                          drawHorizontalLine: true,
-                          drawVerticalLine: false,
-                          getDrawingHorizontalLine: (value) => FlLine(
-                            color: Colors.grey[200]!,
-                            strokeWidth: 1,
-                            dashArray: [5, 5],
-                          ),
+              ),
+            ),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawHorizontalLine: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: Colors.grey[200]!,
+              strokeWidth: 1,
+              dashArray: [5, 5],
+            ),
                           horizontalInterval: maxCaffeineValue > 500 ? 200 : 100,
-                        ),
-                        borderData: FlBorderData(show: false),
-                        barGroups: barGroups,
-                        barTouchData: BarTouchData(
+          ),
+          borderData: FlBorderData(show: false),
+          barGroups: barGroups,
+          barTouchData: BarTouchData(
                           enabled: true,
-                          touchTooltipData: BarTouchTooltipData(
+            touchTooltipData: BarTouchTooltipData(
                             tooltipBgColor: darkAccentColor.withOpacity(0.9),
                             tooltipRoundedRadius: 16,
                             tooltipPadding: const EdgeInsets.all(12),
-                            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                              // Berechne das Datum für diesen Balken
-                              final date =
-                                  today.subtract(Duration(days: 6 - group.x.toInt()));
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                // Berechne das Datum für diesen Balken
+                final date =
+                    today.subtract(Duration(days: 6 - group.x.toInt()));
                               final dateStr = DateFormat.yMMMd('de_DE').format(date);
                               
-                              return BarTooltipItem(
+                return BarTooltipItem(
                                 '$dateStr\n',
-                                const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
+                  const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                                   fontSize: 14,
-                                ),
-                                children: [
-                                  TextSpan(
+                  ),
+                  children: [
+                    TextSpan(
                                     text: '${rod.toY.toInt() <= 5 ? '0' : rod.toY.toInt()} mg Koffein',
-                                    style: const TextStyle(
-                                      color: Colors.white,
+                      style: const TextStyle(
+                        color: Colors.white,
                                       fontWeight: FontWeight.w500,
                                       fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
                       ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
                     ),
                   ),
                 ),
@@ -758,8 +758,8 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                       decoration: BoxDecoration(
                       color: accentColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
+                      ),
+                      child: const Icon(
                       Icons.coffee_rounded,
                       color: accentColor,
                       size: 22,
@@ -942,12 +942,12 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                   ),
                   const SizedBox(height: 20),
                   ...List.generate(favoriteCount, (index) {
-                    final entry = sortedDrinks[index];
-                    final rank = index + 1;
+          final entry = sortedDrinks[index];
+          final rank = index + 1;
                     final caffeineAmount = drinkCaffeine[entry.key] ?? 0;
 
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -961,9 +961,9 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                             ),
                           ],
                         ),
-                        child: Row(
+            child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center, // Vertikale Zentrierung
-                          children: [
+              children: [
                             Container(
                               width: 45,
                               height: 45,
@@ -978,15 +978,15 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                   style: const TextStyle(fontSize: 16),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center, // Vertikale Zentrierung
-                                children: [
-                                  Text(
-                                    entry.key,
+                    children: [
+                      Text(
+                        entry.key,
                                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: darkAccentColor,
@@ -1033,23 +1033,23 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
+                      ),
+                    ],
+                  ),
                                 ],
-                              ),
+                ),
                             ),
                             const SizedBox(width: 4),
-                            Icon(
-                              Icons.favorite,
+                Icon(
+                  Icons.favorite,
                               color: _getMedalColor(rank),
-                              size: 20,
-                            ),
-                          ],
+                  size: 20,
+                ),
+              ],
                         ),
-                      ),
-                    );
-                  }),
+            ),
+          );
+        }),
                 ],
               ),
       ),
@@ -1184,10 +1184,10 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
           final chartHeight = constraints.maxWidth < 360 ? 170.0 : 190.0;
           final isSmallScreen = constraints.maxWidth < 360;
 
-          return Container(
+    return Container(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -1253,34 +1253,34 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                   height: chartHeight,
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 8), // Extra Padding unten
-                    child: LineChart(
-                      LineChartData(
-                        gridData: FlGridData(
-                          show: true,
-                          drawVerticalLine: false,
-                          getDrawingHorizontalLine: (value) => FlLine(
-                            color: Colors.grey[200]!,
-                            strokeWidth: 1,
-                            dashArray: [5, 5],
-                          ),
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (value) => FlLine(
+              color: Colors.grey[200]!,
+              strokeWidth: 1,
+              dashArray: [5, 5],
+            ),
                           horizontalInterval: 100,
-                        ),
-                        titlesData: FlTitlesData(
+          ),
+          titlesData: FlTitlesData(
                           show: true,
-                          topTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          rightTitles: const AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
                                 if (value % (isSmallScreen ? 4 : 3) == 0 && value.toInt() < timePoints.length) {
-                                  final time = timePoints[value.toInt()];
-                                  return SideTitleWidget(
-                                    axisSide: meta.axisSide,
+                    final time = timePoints[value.toInt()];
+                    return SideTitleWidget(
+                      axisSide: meta.axisSide,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 4, 
@@ -1292,9 +1292,9 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                             : Colors.transparent,
                                         borderRadius: BorderRadius.circular(4),
                                       ),
-                                      child: Text(
-                                        '${time.hour}:00',
-                                        style: TextStyle(
+                      child: Text(
+                        '${time.hour}:00',
+                        style: TextStyle(
                                           color: time.hour == now.hour
                                               ? darkAccentColor
                                               : AppTheme.secondaryTextColor,
@@ -1303,19 +1303,19 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                               ? FontWeight.bold
                                               : FontWeight.normal,
                                         ),
-                                      ),
-                                    ),
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
                               reservedSize: 28, // Mehr Platz für X-Achsenbeschriftungen
-                            ),
-                          ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
                                 // Formatiere Zahlen für bessere Platzausnutzung
                                 String label;
                                 if (value >= 1000) {
@@ -1323,63 +1323,63 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                 } else {
                                   label = value.toInt().toString();
                                 }
-                                return SideTitleWidget(
-                                  axisSide: meta.axisSide,
-                                  child: Text(
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    child: Text(
                                     label,
-                                    style: TextStyle(
-                                      color: AppTheme.secondaryTextColor,
+                      style: TextStyle(
+                        color: AppTheme.secondaryTextColor,
                                       fontSize: isSmallScreen ? 8 : 9,
-                                    ),
-                                  ),
-                                );
-                              },
-                              interval: 100,
+                      ),
+                    ),
+                  );
+                },
+                interval: 100,
                               reservedSize: 40, // Mehr Platz für Y-Achsenbeschriftungen
-                            ),
-                          ),
-                        ),
-                        borderData: FlBorderData(show: false),
-                        lineTouchData: LineTouchData(
+              ),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          lineTouchData: LineTouchData(
                           enabled: true,
-                          touchTooltipData: LineTouchTooltipData(
+            touchTooltipData: LineTouchTooltipData(
                             tooltipBgColor: darkAccentColor.withOpacity(0.9),
                             tooltipRoundedRadius: 16,
-                            getTooltipItems: (touchedSpots) {
-                              return touchedSpots.map((spot) {
-                                final time = timePoints[spot.x.toInt()];
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  final time = timePoints[spot.x.toInt()];
                                 final formattedTime = DateFormat('HH:mm', 'de_DE').format(time);
-                                return LineTooltipItem(
+                  return LineTooltipItem(
                                   '$formattedTime\n',
-                                  const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                                     fontSize: 14,
-                                  ),
-                                  children: [
-                                    TextSpan(
-                                      text: '${spot.y.toInt()} mg',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.normal,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '${spot.y.toInt()} mg',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.normal,
                                         fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList();
-                            },
-                          ),
                         ),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: List.generate(timePoints.length, (index) {
-                              return FlSpot(index.toDouble(), caffeineValues[index]);
-                            }),
-                            isCurved: true,
+                      ),
+                    ],
+                  );
+                }).toList();
+              },
+            ),
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: List.generate(timePoints.length, (index) {
+                return FlSpot(index.toDouble(), caffeineValues[index]);
+              }),
+              isCurved: true,
                             color: accentColor,
-                            barWidth: 3,
-                            isStrokeCapRound: true,
+              barWidth: 3,
+              isStrokeCapRound: true,
                             dotData: FlDotData(
                               show: true,
                               getDotPainter: (spot, percent, barData, index) {
@@ -1401,8 +1401,8 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                 );
                               },
                             ),
-                            belowBarData: BarAreaData(
-                              show: true,
+              belowBarData: BarAreaData(
+                show: true,
                               gradient: LinearGradient(
                                 colors: [
                                   accentColor.withOpacity(0.3),
@@ -1412,10 +1412,10 @@ class _StatsScreenState extends State<StatsScreen> with SingleTickerProviderStat
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                               ),
-                            ),
-                          ),
-                        ],
-                        minY: 0,
+              ),
+            ),
+          ],
+          minY: 0,
                         maxY: caffeineValues.first > 400 ? caffeineValues.first * 1.1 : 400,
                         clipData: FlClipData.all(),
                       ),
