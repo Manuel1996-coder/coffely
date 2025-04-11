@@ -17,13 +17,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   bool _isProcessing = false;
   bool _hasError = false;
   String _errorMessage = '';
-  
+
   @override
   void initState() {
     super.initState();
     _initializeScannerController();
   }
-  
+
   void _initializeScannerController() {
     try {
       _controller = MobileScannerController(
@@ -31,7 +31,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         facing: CameraFacing.back,
         torchEnabled: false,
       );
-      
+
       // Clear any previous errors
       if (_hasError) {
         setState(() {
@@ -47,13 +47,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       debugPrint('Fehler beim Initialisieren der Kamera: $e');
     }
   }
-  
+
   @override
   void dispose() {
     _controller?.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,9 +61,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         title: Text(
           'QR-Code scannen',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textColor,
-          ),
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textColor,
+              ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -71,27 +71,35 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         actions: [
           IconButton(
             icon: ValueListenableBuilder(
-              valueListenable: _controller?.torchState ?? ValueNotifier(TorchState.off),
+              valueListenable:
+                  _controller?.torchState ?? ValueNotifier(TorchState.off),
               builder: (context, state, child) {
                 return Icon(
-                  state == TorchState.on ? Icons.flashlight_on : Icons.flashlight_off,
+                  state == TorchState.on
+                      ? Icons.flashlight_on
+                      : Icons.flashlight_off,
                   color: AppTheme.primaryColor,
                 );
               },
             ),
-            onPressed: _controller != null ? () => _controller?.toggleTorch() : null,
+            onPressed:
+                _controller != null ? () => _controller?.toggleTorch() : null,
           ),
           IconButton(
             icon: ValueListenableBuilder(
-              valueListenable: _controller?.cameraFacingState ?? ValueNotifier(CameraFacing.back),
+              valueListenable: _controller?.cameraFacingState ??
+                  ValueNotifier(CameraFacing.back),
               builder: (context, state, child) {
                 return Icon(
-                  state == CameraFacing.front ? Icons.camera_front : Icons.camera_rear,
+                  state == CameraFacing.front
+                      ? Icons.camera_front
+                      : Icons.camera_rear,
                   color: AppTheme.primaryColor,
                 );
               },
             ),
-            onPressed: _controller != null ? () => _controller?.switchCamera() : null,
+            onPressed:
+                _controller != null ? () => _controller?.switchCamera() : null,
           ),
         ],
       ),
@@ -99,8 +107,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         children: [
           Expanded(
             flex: 4,
-            child: _hasError 
-                ? _buildErrorView() 
+            child: _hasError
+                ? _buildErrorView()
                 : Stack(
                     children: [
                       MobileScanner(
@@ -109,7 +117,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                         errorBuilder: (context, error, child) {
                           setState(() {
                             _hasError = true;
-                            _errorMessage = 'Kamera konnte nicht initialisiert werden. Bitte prüfe die App-Berechtigungen.';
+                            _errorMessage =
+                                'Kamera konnte nicht initialisiert werden. Bitte prüfe die App-Berechtigungen.';
                           });
                           return _buildErrorView();
                         },
@@ -166,17 +175,17 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   'Scanne den QR-Code am Tresen',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textColor,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textColor,
+                      ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Der QR-Code ist 2× alle 2 Stunden scanbar',
+                  'Der QR-Code ist unbegrenzt oft scanbar',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.secondaryTextColor,
-                  ),
+                        color: AppTheme.secondaryTextColor,
+                      ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
@@ -206,7 +215,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       ),
     );
   }
-  
+
   Widget _buildErrorView() {
     return Center(
       child: Padding(
@@ -223,9 +232,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             Text(
               'Kamerazugriff nicht möglich',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textColor,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textColor,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -234,8 +243,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   ? 'Bitte prüfe die App-Berechtigungen in den Einstellungen deines Geräts.'
                   : _errorMessage,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.secondaryTextColor,
-              ),
+                    color: AppTheme.secondaryTextColor,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -267,30 +276,30 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       ),
     );
   }
-  
+
   Future<void> _onDetect(BarcodeCapture capture) async {
     if (_isProcessing) return;
-    
+
     if (capture.barcodes.isEmpty) return;
-    
+
     final String? qrData = capture.barcodes.first.rawValue;
     if (qrData == null) return;
-    
+
     // QR Code wurde erkannt, pausiere Scanner
     _controller?.stop();
     _processQrCode(qrData);
   }
-  
+
   Future<void> _processQrCode(String qrData) async {
     setState(() {
       _isProcessing = true;
     });
-    
+
     final stampProvider = Provider.of<StampProvider>(context, listen: false);
-    
+
     try {
       final stampCard = await stampProvider.processQrCode(qrData);
-      
+
       if (stampCard == null) {
         // QR-Code nicht erkannt
         ScaffoldMessenger.of(context).showSnackBar(
@@ -321,11 +330,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       setState(() {
         _isProcessing = false;
       });
-      
+
       // Starte Scanner wieder, wenn wir nicht zur Erfolgsseite navigiert sind
       if (mounted) {
         _controller?.start();
       }
     }
   }
-} 
+}

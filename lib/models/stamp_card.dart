@@ -52,20 +52,20 @@ class StampCard {
     final now = DateTime.now();
     final newStampHistory = List<DateTime>.from(stampHistory)..add(now);
     final newStampCount = currentStamps + 1;
-    
+
     // Prüfe, ob 10 Stempel erreicht wurden
     final newRewardReady = newStampCount >= 10;
-    
+
     // Begrenze die Stempelanzahl auf 10
     final limitedStampCount = newStampCount > 10 ? 10 : newStampCount;
-    
+
     return copyWith(
       currentStamps: limitedStampCount,
       lastScanned: now,
       stampHistory: newStampHistory,
       rewardReady: newRewardReady,
       // Setze Ablaufdatum für Reward, wenn er neu erreicht wurde
-      rewardExpiryDate: newRewardReady && !rewardReady 
+      rewardExpiryDate: newRewardReady && !rewardReady
           ? DateTime.now().add(const Duration(days: 30))
           : rewardExpiryDate,
     );
@@ -76,7 +76,7 @@ class StampCard {
     if (!rewardReady || rewardClaimed) {
       return this;
     }
-    
+
     return copyWith(
       rewardClaimed: true,
       rewardClaimedDate: DateTime.now(),
@@ -88,6 +88,10 @@ class StampCard {
 
   // Prüfe, ob ein neuer Scan erlaubt ist (max. 2 pro 2 Stunden)
   bool canScan() {
+    // Temporär deaktiviert - unbegrenztes Scannen erlaubt
+    return true;
+
+    /*
     final now = DateTime.now();
     // Filtere Stempel der letzten 2 Stunden
     final recentStamps = stampHistory.where((stamp) {
@@ -97,6 +101,7 @@ class StampCard {
     
     // Erlaube maximal 2 Stempel alle 2 Stunden
     return recentStamps.length < 2; // Korrigiert von 100 auf 2
+    */
   }
 
   // Konvertiere zu Map für die Speicherung
@@ -106,7 +111,8 @@ class StampCard {
       'cafeName': cafeName,
       'currentStamps': currentStamps,
       'lastScanned': lastScanned.toIso8601String(),
-      'stampHistory': stampHistory.map((date) => date.toIso8601String()).toList(),
+      'stampHistory':
+          stampHistory.map((date) => date.toIso8601String()).toList(),
       'rewardReady': rewardReady,
       'rewardClaimed': rewardClaimed,
       'rewardClaimedDate': rewardClaimedDate?.toIso8601String(),
@@ -145,4 +151,4 @@ class StampCard {
       );
     }
   }
-} 
+}
