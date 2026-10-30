@@ -8,7 +8,7 @@ import '../providers/coffee_provider.dart';
 import '../models/coffee_drink.dart';
 import '../theme/app_theme.dart';
 import '../providers/user_provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:coffely/l10n/app_localizations.dart';
 
 // Kaffeefarben - weichere, pastellige Töne
 const Color accentColor = Color(0xFF8D6E63); // Sanftes Braun als Hauptfarbe

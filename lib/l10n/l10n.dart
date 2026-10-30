@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:coffely/l10n/app_localizations.dart';
 
 // Erweiterungsmethode für einfachen Zugriff auf lokalisierte Texte
 extension AppLocalizationsExtension on BuildContext {

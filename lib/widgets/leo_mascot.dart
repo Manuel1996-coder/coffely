@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../theme/app_theme.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:coffely/l10n/app_localizations.dart';
 
 enum LeoState {
   happy,     // Standard-Leo bei normalem Kaffeekonsum

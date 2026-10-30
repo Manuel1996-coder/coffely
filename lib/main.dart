@@ -9,7 +9,7 @@ import 'screens/main_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:coffely/l10n/app_localizations.dart';
 import 'l10n/l10n.dart';
 
 // Extension für einfachen Zugriff auf lokalisierte Strings

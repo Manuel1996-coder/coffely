@@ -38,9 +38,9 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.2.2
   fl_chart: ^0.66.2
-  intl: ^0.19.0
+  intl: ^0.20.2
   percent_indicator: ^4.2.3
-  google_fonts: ^6.1.0
+  google_fonts: ^6.3.3
   lottie: ^2.7.0
   image_picker: ^1.0.5
   # QR-Code Scanner Abhängigkeit

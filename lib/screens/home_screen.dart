@@ -6,7 +6,7 @@ import '../theme/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../widgets/leo_mascot.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:coffely/l10n/app_localizations.dart';
 
 // Extension für einfachen Zugriff auf lokalisierte Strings
 extension LocalizationsExtension on BuildContext {
